@@ -1,24 +1,24 @@
 <template>
   <GlassCard hoverable clickable @click="handleClick">
-    <div class="experience-card">
-      <div class="card-header">
-        <div v-if="experience.pictureUrl" class="company-logo">
-          <img :src="experience.pictureUrl" :alt="experience.companyName" />
+    <div class="flex flex-col gap-5">
+      <div class="flex gap-4 items-start">
+        <div v-if="experience.pictureUrl" class="h-16 w-16 rounded-xl overflow-hidden shrink-0 bg-glass-bg">
+          <img :src="experience.pictureUrl" :alt="experience.companyName" class="w-full h-full object-cover" />
         </div>
-        <div class="header-content">
-          <h3 class="company-name">{{ experience.companyName }}</h3>
-          <h4 class="role">{{ experience.role }}</h4>
-          <span class="job-label">{{ experience.jobLabel }}</span>
+        <div class="flex flex-col gap-1 flex-1">
+          <h3 class="text-text-primary! text-xl! font-semibold! m-0">{{ experience.companyName }}</h3>
+          <h4 class="text-text-secondary! font-medium! text-lg m-0">{{ experience.role }}</h4>
+          <span class="text-text-tertiary! text-sm!">{{ experience.jobLabel }}</span>
         </div>
       </div>
-      <p class="description">{{ experience.description }}</p>
-      <div class="dates">
+      <p class="text-text-secondary leading-relaxed m-0">{{ experience.description }}</p>
+      <div class="flex items-center gap-2 text-sm text-text-secondary">
         <span class="date">{{ formatDate(experience.startDate) }}</span>
         <span class="separator">—</span>
         <span class="date">{{ experience.endDate ? formatDate(experience.endDate) : 'Present' }}</span>
-        <span class="duration">({{ calculateDuration() }})</span>
+        <span class="text-text-tertiary italic">({{ calculateDuration() }})</span>
       </div>
-      <div class="card-footer">
+      <div class="pt-2">
         <GlassButton variant="secondary" size="small">View Details</GlassButton>
       </div>
     </div>
@@ -69,85 +69,3 @@ const handleClick = () => {
   emit('click', props.experience.id);
 };
 </script>
-
-<style scoped>
-.experience-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.card-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-.company-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: var(--glass-bg);
-}
-
-.company-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.header-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.company-name {
-  color: var(--text-primary);
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.role {
-  color: var(--text-secondary);
-  font-size: 1.125rem;
-  font-weight: 500;
-  margin: 0;
-}
-
-.job-label {
-  color: var(--text-tertiary);
-  font-size: 0.875rem;
-}
-
-.description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-}
-
-.dates {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.separator {
-  color: var(--text-tertiary);
-}
-
-.duration {
-  color: var(--text-tertiary);
-  font-style: italic;
-}
-
-.card-footer {
-  padding-top: 0.5rem;
-}
-</style>

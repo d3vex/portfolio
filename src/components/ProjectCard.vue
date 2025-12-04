@@ -1,20 +1,21 @@
 <template>
-  <GlassCard hoverable clickable @click="handleClick">
-    <div class="project-card">
-      <div v-if="project.pictureUrl" class="card-image">
-        <img :src="project.pictureUrl" :alt="project.title" />
+  <GlassCard hoverable clickable @click="handleClick" class="group">
+    <div class="flex flex-col h-full">
+      <div v-if="project.pictureUrl" class="w-full h-48 rounded-xl overflow-hidden mb-6">
+        <img class="w-full h-full object-cover transition-transform duration-300 ease-initial group-hover:scale-105" :src="project.pictureUrl" :alt="project.title" />
       </div>
-      <div class="card-content">
-        <div class="card-header">
-          <h3 class="card-title">{{ project.title }}</h3>
-          <span class="card-date">{{ formatDate(project.dateCreated) }}</span>
+      <div class="flex flex-col gap-4 flex-1">
+        <div class="flex justify-between items-start gap-4">
+          <h3 class="text-primary text-2xl font-semibold m-0">{{ project.title }}</h3>
+          <span class="text-tertiary text-sm whitespace-nowrap">{{ formatDate(project.dateCreated) }}</span>
         </div>
-        <p class="card-description">{{ project.description }}</p>
-        <div class="card-stack">
-          <span v-for="tech in project.stack" :key="tech" class="tech-badge">{{ tech }}</span>
+        <p class="text-text-secondary leading-relaxed m-0">{{ project.description }}</p>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="tech in project.stack" :key="tech" 
+          class="bg-glass-bg px-3 py-1 text-sm text-text-primary border border-glass-border rounded-md">{{ tech }}</span>
         </div>
-        <div class="card-footer">
-          <GlassButton v-if="project.projectUrl" size="small" @click.stop="openProject">
+        <div class="flex gap-3 mt-auto pt-4">
+          <GlassButton v-if="project.projectUrl" size="small" variant="primary" @click.capture="openProject($event)">
             Visit Project
           </GlassButton>
           <GlassButton variant="secondary" size="small">View Details</GlassButton>
@@ -51,91 +52,11 @@ const handleClick = () => {
   emit('click', props.project.id);
 };
 
-const openProject = () => {
+const openProject = (event: Event) => {
+  event.stopPropagation();// avoid redirection
   if (props.project.projectUrl) {
     window.open(props.project.projectUrl, '_blank');
   }
 };
 </script>
 
-<style scoped>
-.project-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.card-image {
-  width: 100%;
-  height: 200px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 1.5rem;
-}
-
-.card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.project-card:hover .card-image img {
-  transform: scale(1.05);
-}
-
-.card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  flex: 1;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.card-title {
-  color: var(--text-primary);
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.card-date {
-  color: var(--text-tertiary);
-  font-size: 0.875rem;
-  white-space: nowrap;
-}
-
-.card-description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-}
-
-.card-stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.tech-badge {
-  background: var(--glass-bg);
-  color: var(--primary);
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  border: 1px solid var(--border-color);
-}
-
-.card-footer {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 1rem;
-}
-</style>

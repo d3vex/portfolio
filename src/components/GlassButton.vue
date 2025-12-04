@@ -38,11 +38,11 @@ const handleClick = () => {
     @apply bg-glass-bg-hover border-glass-border-hover translate-y-0.5 shadow-lg shadow-shadow;
   }
   &:active:not(.disabled) {
-    @apply bg-glass-bg-active border-glass-border-active translate-y-0;
+    @apply bg-glass-bg border-glass-border translate-y-0;
   }
 
   &.primary {
-    @apply bg-primary border-primary text-white;
+    @apply bg-primary border-primary-dark text-white;
 
     &:hover:not(.disabled) {
       @apply bg-primary-dark border-primary-dark;

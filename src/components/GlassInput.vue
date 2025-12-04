@@ -1,6 +1,6 @@
 <template>
-  <div class="glass-input">
-    <label v-if="label" :for="id" class="label">{{ label }}</label>
+  <div class="flex flex-col gap-2 w-full">
+    <label v-if="label" :for="id" class="text-text-secondary text-sm font-medium">{{ label }}</label>
     <input
       v-if="type !== 'textarea'"
       :id="id"
@@ -19,9 +19,9 @@
       :disabled="disabled"
       :rows="rows"
       @input="handleInput"
-      class="input textarea"
+      class="input resize-y min-h-25"
     ></textarea>
-    <span v-if="error" class="error">{{ error }}</span>
+    <span v-if="error" class="text-danger text-sm">{{ error }}</span>
   </div>
 </template>
 
@@ -57,55 +57,22 @@ const handleInput = (event: Event) => {
 </script>
 
 <style scoped>
-.glass-input {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-}
+@reference "../style.css";
 
-.label {
-  color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
 
 .input {
-  background: var(--color-glass-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--color-glass-border);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  color: var(--color-text-primary);
-  font-size: 1rem;
-  outline: none;
-  transition: all 0.3s ease;
-  font-family: inherit;
+  @apply bg-glass-bg backdrop-blur-md border border-glass-border rounded-xl px-4 py-3
+   text-text-primary outline-none transition-all duration-300 ease-initial;
+
+   &::placeholder {
+    @apply text-text-tertiary;
+   }
+   &:focus {
+    @apply bg-glass-bg-hover border-primary shadow-glass-bg;
+   }
+   &:disabled {
+    @apply opacity-50 cursor-not-allowed;
+   }
 }
 
-.input::placeholder {
-  color: var(--color-text-tertiary);
-}
-
-.input:focus {
-  background: var(--color-glass-bg-hover);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
-}
-
-.input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.error {
-  color: var(--color-danger);
-  font-size: 0.875rem;
-}
 </style>
