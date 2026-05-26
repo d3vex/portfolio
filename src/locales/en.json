@@ -1,0 +1,113 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "projects": "Projects",
+    "timeline": "Timeline",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Hi, I'm",
+    "name": "Loan MATA",
+    "tagline": "IT Student & Infrastructure Engineer",
+    "subtitle": "Building robust systems, one command at a time",
+    "stat_projects": "Projects",
+    "stat_years": "Years exp.",
+    "stat_techs": "Technologies",
+    "cta_primary": "Explore my work",
+    "cta_secondary": "Contact me",
+    "terminal_hint": "Type 'help' for available commands"
+  },
+  "about": {
+    "title": "About Me",
+    "subtitle": "From code to infrastructure",
+    "bio_1": "French IT student passionate about development and infrastructure/network engineering. I thrive at the intersection where software meets hardware.",
+    "bio_2": "With a strong foundation in both development and system administration, I build complete solutions from frontend to deployment.",
+    "skills_title": "Skills & Expertise",
+    "dev_title": "Development",
+    "infra_title": "Infrastructure & Network"
+  },
+  "projects": {
+    "title": "Projects",
+    "subtitle": "Things I've built",
+    "empty": "No projects found",
+    "view_project": "View Project",
+    "view_details": "Details",
+    "live_demo": "Live Demo",
+    "source_code": "Source Code",
+    "technologies": "Technologies",
+    "status": "Status",
+    "timeline_title": "Project Timeline",
+    "filters": {
+      "all": "All",
+      "dev": "Development",
+      "infra": "Infrastructure",
+      "sysadmin": "System Admin"
+    }
+  },
+  "timeline": {
+    "title": "Timeline",
+    "subtitle": "My journey so far",
+    "education": "Education",
+    "experience": "Experience"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Notes & tutorials",
+    "read_more": "Read more",
+    "published_on": "Published on",
+    "tags": "Tags"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Let's work together",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send Message",
+    "success": "Message sent successfully!",
+    "error": "Failed to send message. Please try again.",
+    "placeholder_name": "Your name",
+    "placeholder_email": "your{'@'}email.com",
+    "placeholder_message": "Tell me about your project..."
+  },
+  "terminal": {
+    "prompt": "visitor{'@'}d3vex-portfolio:~$",
+    "welcome": "Welcome to D3vex's portfolio terminal! Type 'help' to see available commands.",
+    "help_title": "Available commands:",
+    "help_about": "  about      Learn about me",
+    "help_skills": "  skills     View my technical skills",
+    "help_projects": "  projects   Browse my projects",
+    "help_contact": "  contact    Get in touch",
+    "help_clear": "  clear      Clear terminal",
+    "help_help": "  help       Show this message",
+    "help_theme": "  theme      Toggle dark/light mode",
+    "help_lang": "  lang       Switch language (fr/en)",
+    "help_social": "  social     Show my social links",
+    "help_banner": "  banner     Display the welcome banner",
+    "about_text": "I'm Loan MATA (D3vex), a French IT student passionate about software development and infrastructure engineering. I build things from frontend to bare metal.",
+    "skills_text": "Skills: Development (Vue, React, Node, Python, Go), Infrastructure (Docker, Kubernetes, Linux, CI/CD, Network), Databases (PostgreSQL, Redis, MongoDB)",
+    "contact_text": "You can reach me at: loan.mata{'@'}email.com\nGitHub: github.com/D3vex\nLinkedIn: linkedin.com/in/loanmata",
+    "theme_text": "Theme toggled!",
+    "lang_text": "Language switched to {lang}",
+    "not_found": "Command not found: {cmd}. Type 'help' for available commands."
+  },
+  "footer": {
+    "copyright": "© {year} Loan MATA — Built with Vue & Tailwind",
+    "made_with": "Made with coffee and late-night debugging sessions"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "switch": "Switch language"
+  },
+  "errors": {
+    "404_title": "404 — Page not found",
+    "404_message": "The page you're looking for doesn't exist.",
+    "404_back": "Back to home"
+  }
+}

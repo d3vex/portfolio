@@ -1,0 +1,113 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "projects": "Projets",
+    "timeline": "Parcours",
+    "blog": "Blog",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Salut, je suis",
+    "name": "Loan MATA",
+    "tagline": "Étudiant en IT & Ingénieur Infrastructure",
+    "subtitle": "Je construis des systèmes robustes, une commande à la fois",
+    "stat_projects": "Projets",
+    "stat_years": "Ans d'exp.",
+    "stat_techs": "Technologies",
+    "cta_primary": "Voir mon travail",
+    "cta_secondary": "Me contacter",
+    "terminal_hint": "Tape 'help' pour les commandes disponibles"
+  },
+  "about": {
+    "title": "À propos",
+    "subtitle": "Du code à l'infrastructure",
+    "bio_1": "Étudiant français passionné par le développement et l'ingénierie infrastructure/réseau. Je prospère à l'intersection où le logiciel rencontre le matériel.",
+    "bio_2": "Avec de solides bases en développement et en administration système, je construis des solutions complètes du frontend au déploiement.",
+    "skills_title": "Compétences & Expertise",
+    "dev_title": "Développement",
+    "infra_title": "Infrastructure & Réseau"
+  },
+  "projects": {
+    "title": "Projets",
+    "subtitle": "Ce que j'ai construit",
+    "empty": "Aucun projet trouvé",
+    "view_project": "Voir le projet",
+    "view_details": "Détails",
+    "live_demo": "Démo en ligne",
+    "source_code": "Code source",
+    "technologies": "Technologies",
+    "status": "Statut",
+    "timeline_title": "Chronologie du projet",
+    "filters": {
+      "all": "Tous",
+      "dev": "Développement",
+      "infra": "Infrastructure",
+      "sysadmin": "Administration Système"
+    }
+  },
+  "timeline": {
+    "title": "Parcours",
+    "subtitle": "Mon chemin jusqu'à présent",
+    "education": "Formation",
+    "experience": "Expérience"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Notes & tutoriels",
+    "read_more": "Lire la suite",
+    "published_on": "Publié le",
+    "tags": "Tags"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Travaillons ensemble",
+    "name": "Nom",
+    "email": "Email",
+    "message": "Message",
+    "send": "Envoyer",
+    "success": "Message envoyé avec succès !",
+    "error": "Échec de l'envoi. Veuillez réessayer.",
+    "placeholder_name": "Votre nom",
+    "placeholder_email": "votre{'@'}email.com",
+    "placeholder_message": "Parlez-moi de votre projet..."
+  },
+  "terminal": {
+    "prompt": "visiteur{'@'}d3vex-portfolio:~$",
+    "welcome": "Bienvenue dans le terminal du portfolio de D3vex ! Tape 'help' pour voir les commandes disponibles.",
+    "help_title": "Commandes disponibles :",
+    "help_about": "  about      Apprendre à me connaître",
+    "help_skills": "  skills     Voir mes compétences techniques",
+    "help_projects": "  projects   Parcourir mes projets",
+    "help_contact": "  contact    Me contacter",
+    "help_clear": "  clear      Effacer le terminal",
+    "help_help": "  help       Afficher ce message",
+    "help_theme": "  theme      Changer le thème sombre/clair",
+    "help_lang": "  lang       Changer la langue (fr/en)",
+    "help_social": "  social     Voir mes liens sociaux",
+    "help_banner": "  banner     Afficher la bannière de bienvenue",
+    "about_text": "Je suis Loan MATA (D3vex), un étudiant français passionné par le développement logiciel et l'ingénierie infrastructure. Je construis des choses du frontend au bare metal.",
+    "skills_text": "Compétences : Développement (Vue, React, Node, Python, Go), Infrastructure (Docker, Kubernetes, Linux, CI/CD, Réseau), Bases de données (PostgreSQL, Redis, MongoDB)",
+    "contact_text": "Vous pouvez me joindre à : loan.mata{'@'}email.com\nGitHub : github.com/D3vex\nLinkedIn : linkedin.com/in/loanmata",
+    "theme_text": "Thème changé !",
+    "lang_text": "Langue changée en {lang}",
+    "not_found": "Commande introuvable : {cmd}. Tape 'help' pour voir les commandes disponibles."
+  },
+  "footer": {
+    "copyright": "© {year} Loan MATA — Construit avec Vue & Tailwind",
+    "made_with": "Fait avec ☕ et des sessions de debug tard le soir"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "toggle": "Changer le thème"
+  },
+  "language": {
+    "switch": "Changer de langue"
+  },
+  "errors": {
+    "404_title": "404 — Page introuvable",
+    "404_message": "La page que vous cherchez n'existe pas.",
+    "404_back": "Retour à l'accueil"
+  }
+}
