@@ -1,17 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
-
-// Client Pages
-import HomePage from '@/pages/client/HomePage.vue';
-import ProjectsPage from '@/pages/client/ProjectsPage.vue';
-import ProjectDetailPage from '@/pages/client/ProjectDetailPage.vue';
-import ExperiencesPage from '@/pages/client/ExperiencesPage.vue';
-import ExperienceDetailPage from '@/pages/client/ExperienceDetailPage.vue';
-import ContactPage from '@/pages/client/ContactPage.vue';
-
-// Admin Pages
-import AdminLayout from '@/pages/admin/AdminLayout.vue';
-import AdminDashboard from '@/pages/admin/AdminDashboard.vue';
-import AdminContacts from '@/pages/admin/AdminContacts.vue';
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,64 +6,53 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomePage,
+      component: () => import('@/pages/HomePage.vue'),
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('@/pages/AboutPage.vue'),
     },
     {
       path: '/projects',
       name: 'projects',
-      component: ProjectsPage,
+      component: () => import('@/pages/ProjectsPage.vue'),
     },
     {
       path: '/projects/:id',
       name: 'project-detail',
-      component: ProjectDetailPage,
+      component: () => import('@/pages/ProjectDetailPage.vue'),
     },
     {
-      path: '/experiences',
-      name: 'experiences',
-      component: ExperiencesPage,
+      path: '/timeline',
+      name: 'timeline',
+      component: () => import('@/pages/TimelinePage.vue'),
     },
     {
-      path: '/experiences/:id',
-      name: 'experience-detail',
-      component: ExperienceDetailPage,
+      path: '/blog',
+      name: 'blog',
+      component: () => import('@/pages/BlogPage.vue'),
+    },
+    {
+      path: '/blog/:slug',
+      name: 'blog-post',
+      component: () => import('@/pages/BlogPostPage.vue'),
     },
     {
       path: '/contact',
       name: 'contact',
-      component: ContactPage,
+      component: () => import('@/pages/ContactPage.vue'),
     },
     {
-      path: '/admin',
-      component: AdminLayout,
-      children: [
-        {
-          path: '',
-          name: 'admin-dashboard',
-          component: AdminDashboard,
-        },
-        {
-          path: 'contacts',
-          name: 'admin-contacts',
-          component: AdminContacts,
-        },
-        // Placeholder routes for future admin pages
-        {
-          path: 'projects',
-          name: 'admin-projects',
-          component: AdminDashboard, // Temporary
-        },
-        {
-          path: 'experiences',
-          name: 'admin-experiences',
-          component: AdminDashboard, // Temporary
-        },
-      ],
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/pages/NotFoundPage.vue'),
     },
   ],
-  scrollBehavior() {
-    return { top: 0 };
-  },
-});
+})
 
-export default router;
+router.afterEach(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
+
+export default router

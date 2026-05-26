@@ -1,14 +1,17 @@
-<template>
-    <MainLayout>
-      <router-view />
-    </MainLayout>
-</template>
-
 <script setup lang="ts">
-import MainLayout from '@/layouts/MainLayout.vue';
+import { onMounted } from 'vue'
+import { useAppStore } from '@/stores/app'
+import AppLayout from '@/components/layout/AppLayout.vue'
+
+const appStore = useAppStore()
+
+onMounted(() => {
+  appStore.initTheme()
+})
 </script>
 
-<style>
-/* Global styles are in style.css */
-</style>
-
+<template>
+  <AppLayout>
+    <RouterView />
+  </AppLayout>
+</template>
