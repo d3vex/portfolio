@@ -4,7 +4,7 @@ import { createI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 
 import App from './App.vue'
-import router from './router'
+import router from './router/index.ts'
 import en from './locales/en.json'
 import fr from './locales/fr.json'
 import './app.css'

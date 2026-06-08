@@ -1,15 +1,22 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
 import TerminalModal from '@/components/terminal/TerminalModal.vue'
 import ParticleNetwork from '@/components/3d/ParticleNetwork.vue'
+
+const route = useRoute()
+const isAdmin = computed(() => route.path.startsWith('/admin'))
 </script>
 
 <template>
   <div class="app_layout">
-    <ParticleNetwork />
-    <AppHeader />
-    <main class="app_layout__main">
+    <template v-if="!isAdmin">
+      <ParticleNetwork />
+      <AppHeader />
+    </template>
+    <main class="app_layout__main" :class="{ 'pt-0': isAdmin }">
       <slot />
     </main>
     <AppFooter />

@@ -13,8 +13,8 @@ const navItems = [
   { label: 'nav.about', path: '/about' },
   { label: 'nav.projects', path: '/projects' },
   { label: 'nav.timeline', path: '/timeline' },
-  { label: 'nav.blog', path: '/blog' },
-  { label: 'nav.contact', path: '/contact' },
+/*   { label: 'nav.blog', path: '/blog' },
+ */  { label: 'nav.contact', path: '/contact' },
 ] as const
 
 function navigate(path: string) {
