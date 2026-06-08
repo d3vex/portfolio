@@ -8,7 +8,7 @@ export interface Project {
   imageUrl: string
   liveUrl?: string
   sourceUrl?: string
-  status: 'completed' | 'in-progress' | 'planned'
+  status: 'completed' | 'testing' | 'in-progress' | 'planned'
   featured: boolean
   timeline: TimelineEntry[]
   createdAt: string
@@ -19,7 +19,7 @@ export interface TimelineEntry {
   date: string
   title: string
   description: string
-  status: 'done' | 'in-progress' | 'todo'
+  status: 'done' | 'testing' | 'in-progress' | 'todo'
   imageUrl?: string
 }
 
@@ -35,7 +35,8 @@ export interface Skill {
 export interface TimelineEvent {
   id: string
   type: 'education' | 'experience'
-  date: string
+  startDate: string
+  endDate?: string
   title: string
   subtitle: string
   description: string

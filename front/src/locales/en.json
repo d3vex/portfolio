@@ -50,7 +50,10 @@
     "title": "Timeline",
     "subtitle": "My journey so far",
     "education": "Education",
-    "experience": "Experience"
+    "experience": "Experience",
+    "all": "All",
+    "present": "Present",
+    "empty": "No events for this period"
   },
   "blog": {
     "title": "Blog",

@@ -9,9 +9,35 @@ const { data: events, loading } = useAsyncData(() => getTimeline())
 
 const expanded = ref<Set<string>>(new Set())
 
-const sortedEvents = computed(() => {
+const years = computed(() => {
   if (!events.value) return []
-  return [...events.value].sort((a, b) => b.date.localeCompare(a.date))
+  const set = new Set<string>()
+  for (const e of events.value) {
+    set.add(e.startDate.slice(0, 4))
+    if (e.endDate) set.add(e.endDate.slice(0, 4))
+  }
+  return [...set].sort()
+})
+
+const selectedYear = ref('')
+
+const filteredEvents = computed(() => {
+  if (!events.value) return []
+  let list = [...events.value]
+  if (selectedYear.value) {
+    list = list.filter(e => {
+      const start = e.startDate.slice(0, 4)
+      const end = e.endDate ? e.endDate.slice(0, 4) : '9999'
+      return start <= selectedYear.value && end >= selectedYear.value
+    })
+  }
+  return list.sort((a, b) => {
+    const aEnd = a.endDate || '9999-99'
+    const bEnd = b.endDate || '9999-99'
+    const cmp = bEnd.localeCompare(aEnd)
+    if (cmp !== 0) return cmp
+    return b.startDate.localeCompare(a.startDate)
+  })
 })
 
 function toggleSubProjects(id: string) {
@@ -19,6 +45,12 @@ function toggleSubProjects(id: string) {
   if (next.has(id)) next.delete(id)
   else next.add(id)
   expanded.value = next
+}
+
+function formatDate(date: string): string {
+  const [y, m] = date.split('-')
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return m ? `${months[parseInt(m) - 1]} ${y}` : y
 }
 </script>
 
@@ -30,13 +62,37 @@ function toggleSubProjects(id: string) {
         <p class="timeline_page__subtitle">{{ t('timeline.subtitle') }}</p>
       </div>
 
+      <!-- Year filter -->
+      <div v-if="years.length > 1" class="timeline_page__filter">
+        <button
+          class="timeline_page__filter-btn"
+          :class="{ 'timeline_page__filter-btn--active': !selectedYear }"
+          @click="selectedYear = ''"
+        >
+          {{ t('timeline.all') }}
+        </button>
+        <button
+          v-for="y in years"
+          :key="y"
+          class="timeline_page__filter-btn"
+          :class="{ 'timeline_page__filter-btn--active': selectedYear === y }"
+          @click="selectedYear = y"
+        >
+          {{ y }}
+        </button>
+      </div>
+
       <div v-if="loading" class="timeline_page__loading">
         <div v-for="n in 4" :key="n" class="timeline_page__skeleton" />
       </div>
 
+      <div v-else-if="!filteredEvents.length" class="timeline_page__empty">
+        {{ t('timeline.empty') }}
+      </div>
+
       <div v-else class="timeline_page__list">
         <div
-          v-for="event in sortedEvents"
+          v-for="event in filteredEvents"
           :key="event.id"
           class="timeline_page__item"
           :class="`timeline_page__item--${event.type}`"
@@ -48,7 +104,11 @@ function toggleSubProjects(id: string) {
           <div class="timeline_page__item-content">
             <div class="timeline_page__item-header">
               <span class="timeline_page__item-type">{{ t(`timeline.${event.type}`) }}</span>
-              <span class="timeline_page__item-date font-mono">{{ event.date }}</span>
+              <span class="timeline_page__item-date font-mono">
+                {{ formatDate(event.startDate) }}
+                <template v-if="event.endDate"> – {{ formatDate(event.endDate) }}</template>
+                <template v-else> – {{ t('timeline.present') }}</template>
+              </span>
             </div>
             <h3 class="timeline_page__item-title">{{ event.title }}</h3>
             <p class="timeline_page__item-subtitle">{{ event.subtitle }}</p>
@@ -288,6 +348,35 @@ function toggleSubProjects(id: string) {
     background-color: var(--color-accent);
     opacity: 0.85;
     color: white;
+  }
+
+  // ── Filter ──────────────────────
+
+  &__filter {
+    @apply flex flex-wrap gap-2 mb-8 justify-center;
+  }
+
+  &__filter-btn {
+    @apply px-4 py-1.5 rounded-lg text-sm font-mono transition-all duration-200 border;
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+
+    &:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    &--active {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+      color: white;
+    }
+  }
+
+  &__empty {
+    @apply text-center py-16 text-sm font-mono;
+    color: var(--color-text-secondary);
   }
 }
 </style>

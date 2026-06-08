@@ -13,13 +13,20 @@ const { data: project, loading } = useAsyncData(() => getProject(route.params.id
 
 const progressPercent = computed(() => {
   if (!project.value) return 0
-  const done = project.value.timeline.filter(e => e.status === 'done').length
-  return Math.round((done / project.value.timeline.length) * 100)
+  const total = project.value.timeline.length
+  const weight = project.value.timeline.reduce((sum, e) => {
+    if (e.status === 'done') return sum + 1
+    if (e.status === 'testing') return sum + 0.85
+    if (e.status === 'in-progress') return sum + 0.5
+    return sum
+  }, 0)
+  return Math.round((weight / total) * 100)
 })
 
 function statusIcon(status: string) {
   switch (status) {
     case 'done': return 'mdi:check-circle'
+    case 'testing': return 'mdi:bug-check'
     case 'in-progress': return 'mdi:progress-check'
     case 'todo': return 'mdi:circle-outline'
     default: return 'mdi:circle-outline'
@@ -29,6 +36,7 @@ function statusIcon(status: string) {
 function statusColor(status: string) {
   switch (status) {
     case 'done': return 'text-green-500'
+    case 'testing': return 'text-blue-500'
     case 'in-progress': return 'text-amber-500'
     case 'todo': return 'text-zinc-500'
     default: return ''
@@ -38,6 +46,7 @@ function statusColor(status: string) {
 function statusLineColor(status: string) {
   switch (status) {
     case 'done': return 'var(--color-dot-done)'
+    case 'testing': return 'var(--color-dot-testing)'
     case 'in-progress': return 'var(--color-dot-progress)'
     case 'todo': return 'var(--color-dot-todo)'
     default: return 'var(--color-border)'
@@ -67,7 +76,7 @@ function openUrl(url: string) {
         <div class="project_detail__header">
           <div class="project_detail__meta">
             <span class="project_detail__category">{{ project.category }}</span>
-            <span class="project_detail__status" :class="`text-${project.status === 'completed' ? 'green' : project.status === 'in-progress' ? 'amber' : 'zinc'}-500`">
+            <span class="project_detail__status" :class="project.status === 'completed' ? 'text-green-500' : project.status === 'testing' ? 'text-blue-500' : project.status === 'in-progress' ? 'text-amber-500' : 'text-zinc-500'">
               {{ project.status }}
             </span>
           </div>
@@ -150,6 +159,7 @@ function openUrl(url: string) {
 <style lang="scss" scoped>
 .project_detail {
   --color-dot-done: #22c55e;
+  --color-dot-testing: #3b82f6;
   --color-dot-progress: #f59e0b;
   --color-dot-todo: #52525b;
 
@@ -246,8 +256,9 @@ function openUrl(url: string) {
   }
 
   &__progress-fill {
-    @apply h-full rounded-full transition-all duration-1000 ease-out;
-    background: linear-gradient(90deg, var(--color-accent), #00FF00);
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, var(--color-accent), #3b82f6, #22c55e);
+    transition: width 1s ease-out;
   }
 
   &__progress-text {
@@ -318,6 +329,7 @@ function openUrl(url: string) {
     }
 
     &.text-green-500 { border-color: var(--color-dot-done); }
+    &.text-blue-500 { border-color: var(--color-dot-testing); }
     &.text-amber-500 { border-color: var(--color-dot-progress); }
     &.text-zinc-500 { border-color: var(--color-dot-todo); }
   }

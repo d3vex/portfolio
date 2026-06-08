@@ -35,6 +35,7 @@ function viewProject(id: string) {
 function statusColor(status: Project['status']) {
   switch (status) {
     case 'completed': return 'text-green-500'
+    case 'testing': return 'text-blue-500'
     case 'in-progress': return 'text-amber-500'
     case 'planned': return 'text-zinc-500'
   }
@@ -43,6 +44,7 @@ function statusColor(status: Project['status']) {
 function statusDot(status: Project['status']) {
   switch (status) {
     case 'completed': return 'projects_page__status-dot--completed'
+    case 'testing': return 'projects_page__status-dot--testing'
     case 'in-progress': return 'projects_page__status-dot--progress'
     case 'planned': return 'projects_page__status-dot--planned'
   }
@@ -284,6 +286,11 @@ function filterCount(key: string) {
       @apply bg-green-500;
     }
 
+    &--testing {
+      @apply bg-blue-500;
+      animation: spin-dot 2s linear infinite;
+    }
+
     &--progress {
       @apply bg-amber-500;
       animation: pulse-dot 2s ease-in-out infinite;
@@ -319,6 +326,11 @@ function filterCount(key: string) {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes spin-dot {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1); }
 }
 
 @keyframes pulse-dot {
