@@ -13,3 +13,4 @@ coverage/
 *.zip
 *.tar.gz
 *.tgz
+*.tsbuildinfo
