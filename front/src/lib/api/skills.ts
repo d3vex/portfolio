@@ -11,13 +11,14 @@ const MOCK_SKILLS: Skill[] = [
   { id: '7', name: 'Rust', category: 'dev', level: 15, icon: 'mdi:language-rust', keywords: ['Memory Safety', 'Concurrency', 'Performance'] },
   { id: '8', name: 'Docker', category: 'infra', level: 90, icon: 'mdi:docker', keywords: ['Compose', 'Dockerfile'] },
   { id: '9', name: 'Kubernetes', category: 'infra', level: 75, icon: 'mdi:kubernetes', keywords: ['Pods', 'Services', 'Helm', 'ArgoCD'] },
-  { id: '10', name: 'Linux', category: 'sysadmin', level: 90, icon: 'mdi:linux', keywords: ['Shell', 'Systemd', 'Security'] },
-  { id: '11', name: 'CI/CD', category: 'infra', level: 75, icon: 'mdi:pipeline', keywords: ['GitHub Actions', 'GitLab CI', 'Jenkins'] },
-  { id: '12', name: 'MariaDB', category: 'dev', level: 80, icon: 'mdi:database', keywords: ['SQL', 'Indexing', 'Migration'] },
-  { id: '13', name: 'Redis', category: 'infra', level: 70, icon: 'mdi:redis', keywords: ['Caching', 'Pub/Sub', 'Session'] },
-  { id: '14', name: 'MongoDB', category: 'dev', level: 10, icon: 'mdi:mongodb', keywords: ['NoSQL', 'Aggregation', 'Indexes'] },
-  { id: '15', name: 'Networking', category: 'sysadmin', level: 80, icon: 'mdi:wan', keywords: ['TCP/IP', 'DNS', 'Firewall', 'VPN'] },
-  { id: '16', name: 'Git', category: 'dev', level: 85, icon: 'mdi:git', keywords: ['Branching', 'Rebase', 'Workflows'] },
+  { id: '10', name: 'Proxmox', category: 'infra', level: 75, icon: 'cib:proxmox', keywords: ['HA', 'Virtualization', 'Storage'] },
+  { id: '11', name: 'Linux', category: 'sysadmin', level: 90, icon: 'mdi:linux', keywords: ['Shell', 'Systemd', 'Security'] },
+  { id: '12', name: 'CI/CD', category: 'infra', level: 75, icon: 'cib:azure-pipelines', keywords: ['GitHub Actions', 'GitLab CI', 'Jenkins'] },
+  { id: '13', name: 'MariaDB', category: 'dev', level: 80, icon: 'mdi:database', keywords: ['SQL', 'Indexing', 'Migration'] },
+  { id: '14', name: 'Redis', category: 'infra', level: 70, icon: 'cib:redis', keywords: ['Caching', 'Pub/Sub', 'Session'] },
+  { id: '15', name: 'MongoDB', category: 'dev', level: 10, icon: 'cib:mongodb', keywords: ['NoSQL', 'Aggregation', 'Indexes'] },
+  { id: '16', name: 'Networking', category: 'sysadmin', level: 80, icon: 'mdi:wan', keywords: ['TCP/IP', 'DNS', 'Firewall', 'VPN'] },
+  { id: '17', name: 'Git', category: 'dev', level: 85, icon: 'mdi:git', keywords: ['Versionning', 'Contribution', 'Workflows'] },
 ]
 
 export async function getSkills() {
