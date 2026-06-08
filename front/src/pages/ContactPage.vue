@@ -52,14 +52,14 @@ async function handleSubmit() {
             <div class="contact_page__info-card">
               <Icon icon="mdi:github" class="w-5 h-5 text-accent shrink-0" />
               <div class="min-w-0">
-                <a href="https://github.com/D3vex" target="_blank" rel="noopener" class="font-medium text-sm hover:text-accent truncate block">github.com/D3vex</a>
+                <a :href="contactInfo?.github || 'https://github.com/D3vex'" target="_blank" rel="noopener" class="font-medium text-sm hover:text-accent truncate block">github.com/D3vex</a>
                 <p class="text-xs text-zinc-500">Open source &amp; projects</p>
               </div>
             </div>
             <div class="contact_page__info-card">
               <Icon icon="mdi:linkedin" class="w-5 h-5 text-accent shrink-0" />
               <div class="min-w-0">
-                <a href="https://linkedin.com/in/loanmata" target="_blank" rel="noopener" class="font-medium text-sm hover:text-accent truncate block">linkedin.com/in/loanmata</a>
+                <a :href="contactInfo?.linkedin || 'https://linkedin.com/in/loan-mata'" target="_blank" rel="noopener" class="font-medium text-sm hover:text-accent truncate block">{{ contactInfo?.linkedinName || 'LinkedIn' }}</a>
                 <p class="text-xs text-zinc-500">Professional profile</p>
               </div>
             </div>

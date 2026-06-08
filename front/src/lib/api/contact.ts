@@ -20,6 +20,7 @@ export async function getContactInfo() {
     email: 'loanmata4@gmail.com',
     github: 'https://github.com/D3vex',
     linkedin: 'https://linkedin.com/in/loan-mata',
+    linkedinName: 'Loan Mata',
     location: 'France',
   })
 }
