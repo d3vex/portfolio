@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
+import { Skill } from '../../skill/entities/skill.entity';
+import { Language } from '../../language/entities/language.entity';
+import { Passion } from '../../passion/entities/passion.entity';
+import { Experience } from '../../experience/entities/experience.entity';
+import { Project } from '../../project/entities/project.entity';
+import { Education } from '../../education/entities/education.entity';
+import { Image } from '../../images/entities/image.entity';
 
 @Entity('cvs')
 export class Cv {
@@ -17,31 +24,44 @@ export class Cv {
   @Column({ type: 'text', nullable: true })
   aboutText: string;
 
-  @Column({ type: 'simple-json', nullable: true })
-  skillIds: string[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'cv_skills' })
+  skills: Skill[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  languageIds: string[];
+  @ManyToMany(() => Language)
+  @JoinTable({ name: 'cv_languages' })
+  languages: Language[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  passionIds: string[];
+  @ManyToMany(() => Passion)
+  @JoinTable({ name: 'cv_passions' })
+  passions: Passion[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  experienceIds: string[];
+  @ManyToMany(() => Experience)
+  @JoinTable({ name: 'cv_experiences' })
+  experiences: Experience[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  projectIds: string[];
+  @ManyToMany(() => Project)
+  @JoinTable({ name: 'cv_projects' })
+  projects: Project[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  educationIds: string[];
+  @ManyToMany(() => Education)
+  @JoinTable({ name: 'cv_education' })
+  education: Education[];
+
+  @Column({ type: 'json', nullable: true })
+  projectBullets: Record<string, number[]>;
 
   @Column({ nullable: true })
   pictureId: string;
 
+  @ManyToOne(() => Image)
+  @JoinColumn({ name: 'pictureId' })
+  picture: Image;
+
   @Column({ nullable: true })
   availability: string;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   isDefault: boolean;
 
   @CreateDateColumn()

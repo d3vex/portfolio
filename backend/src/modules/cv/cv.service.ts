@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Cv } from './entities/cv.entity';
 import { Skill } from '../skill/entities/skill.entity';
 import { Project } from '../project/entities/project.entity';
@@ -26,23 +26,38 @@ export class CvService {
   ) {}
 
   findAll() {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
+    return this.repo.find({ relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, picture: true }, order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string) {
-    const cv = await this.repo.findOne({ where: { id } });
+    const cv = await this.repo.findOne({ where: { id }, relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, picture: true } });
     if (!cv) throw new NotFoundException('CV not found');
     return cv;
   }
 
-  create(dto: CreateCvDto) {
-    return this.repo.save(this.repo.create(dto));
+  async create(dto: CreateCvDto) {
+    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, ...rest } = dto;
+    const entity = this.repo.create(rest);
+    entity.skills = skillIds?.length ? await this.skillRepo.findBy({ id: In(skillIds) }) : [];
+    entity.languages = languageIds?.length ? await this.languageRepo.findBy({ id: In(languageIds) }) : [];
+    entity.passions = passionIds?.length ? await this.passionRepo.findBy({ id: In(passionIds) }) : [];
+    entity.experiences = experienceIds?.length ? await this.experienceRepo.findBy({ id: In(experienceIds) }) : [];
+    entity.projects = projectIds?.length ? await this.projectRepo.findBy({ id: In(projectIds) }) : [];
+    entity.education = educationIds?.length ? await this.educationRepo.findBy({ id: In(educationIds) }) : [];
+    return this.repo.save(entity);
   }
 
   async update(id: string, dto: UpdateCvDto) {
-    const cv = await this.findOne(id);
-    Object.assign(cv, dto);
-    return this.repo.save(cv);
+    const entity = await this.findOne(id);
+    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, ...rest } = dto as any;
+    Object.assign(entity, rest);
+    if (skillIds !== undefined) entity.skills = skillIds?.length ? await this.skillRepo.findBy({ id: In(skillIds) }) : [];
+    if (languageIds !== undefined) entity.languages = languageIds?.length ? await this.languageRepo.findBy({ id: In(languageIds) }) : [];
+    if (passionIds !== undefined) entity.passions = passionIds?.length ? await this.passionRepo.findBy({ id: In(passionIds) }) : [];
+    if (experienceIds !== undefined) entity.experiences = experienceIds?.length ? await this.experienceRepo.findBy({ id: In(experienceIds) }) : [];
+    if (projectIds !== undefined) entity.projects = projectIds?.length ? await this.projectRepo.findBy({ id: In(projectIds) }) : [];
+    if (educationIds !== undefined) entity.education = educationIds?.length ? await this.educationRepo.findBy({ id: In(educationIds) }) : [];
+    return this.repo.save(entity);
   }
 
   async remove(id: string) {
