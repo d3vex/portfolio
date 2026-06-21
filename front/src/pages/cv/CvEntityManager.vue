@@ -84,9 +84,11 @@ const entityConfig: Record<string, EntityConfig> = {
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'company', label: 'Company', type: 'text' },
       { key: 'location', label: 'Location', type: 'text' },
+      { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'startDate', label: 'Start Date', type: 'month' },
       { key: 'endDate', label: 'End Date', type: 'month' },
-      { key: 'descriptions', label: 'Task Bullets', type: 'bullet-list' },
+      { key: 'experiencePoints', label: 'Task Bullets', type: 'bullet-list' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
       { key: 'links', label: 'Links', type: 'links' },
       { key: 'imageId', label: 'Image', type: 'image' },
       { key: 'order', label: 'Order', type: 'number' },
@@ -97,7 +99,7 @@ const entityConfig: Record<string, EntityConfig> = {
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'subtitle', label: 'Subtitle', type: 'text' },
       { key: 'description', label: 'Short Description', type: 'text' },
-      { key: 'descriptions', label: 'Bullet Points', type: 'bullet-list' },
+      { key: 'projectPoints', label: 'Bullet Points', type: 'bullet-list' },
       { key: 'longDescription', label: 'Long Description', type: 'textarea' },
       { key: 'status', label: 'Status', type: 'select', options: [
         { value: 'completed', label: 'Completed' },
@@ -156,6 +158,10 @@ const entityConfig: Record<string, EntityConfig> = {
         { value: 'info', label: 'Information' },
         { value: 'link', label: 'Link' },
       ]},
+      { key: 'isPrivate', label: 'Private', type: 'select', options: [
+        { value: 'false', label: 'Public' },
+        { value: 'true', label: 'Private' },
+      ]},
       { key: 'icon', label: 'Icon', type: 'icon' },
       { key: 'order', label: 'Order', type: 'number' },
     ],
@@ -173,11 +179,17 @@ const entityConfig: Record<string, EntityConfig> = {
 
 const config = computed(() => entityConfig[entityKey.value] || entityConfig.skills)
 
+const bulletFieldKey = computed(() => {
+  if (entityKey.value === 'projects') return 'projectPoints'
+  if (entityKey.value === 'experiences') return 'experiencePoints'
+  return ''
+})
+
 const visibleFields = computed(() =>
   config.value.fields.filter(f =>
     f.type !== 'image' && f.type !== 'links' && f.type !== 'timeline'
     && f.type !== 'bullet-list' && f.type !== 'tech-list'
-    && f.key !== 'longDescription' && f.key !== 'description' && f.key !== 'descriptions'
+    && f.key !== 'longDescription' && f.key !== 'description'
   )
 )
 
@@ -209,29 +221,33 @@ function addSelectedCategory() {
   selectedCategoryId.value = ''
 }
 
+function bullets() {
+  return form.value[bulletFieldKey.value] || []
+}
+
 function addBullet() {
   if (!newBulletText.value.trim()) return
-  if (!form.value.descriptions) form.value.descriptions = []
-  form.value.descriptions.push({ text: newBulletText.value.trim(), skillIds: [...newBulletSkills.value] })
+  if (!form.value[bulletFieldKey.value]) form.value[bulletFieldKey.value] = []
+  form.value[bulletFieldKey.value].push({ text: newBulletText.value.trim(), skillIds: [...newBulletSkills.value] })
   newBulletText.value = ''
   newBulletSkills.value = []
   showBulletForm.value = false
 }
 
 function removeBullet(idx: number) {
-  form.value.descriptions?.splice(idx, 1)
+  form.value[bulletFieldKey.value]?.splice(idx, 1)
 }
 
 function startEditBullet(idx: number) {
-  const b = form.value.descriptions?.[idx]
+  const b = form.value[bulletFieldKey.value]?.[idx]
   if (!b) return
   editingBullet.value = { index: idx, text: b.text, skillIds: [...(b.skillIds || [])] }
 }
 
 function saveEditBullet() {
   if (!editingBullet.value || !editingBullet.value.text.trim()) return
-  if (form.value.descriptions) {
-    form.value.descriptions[editingBullet.value.index] = {
+  if (form.value[bulletFieldKey.value]) {
+    form.value[bulletFieldKey.value][editingBullet.value.index] = {
       text: editingBullet.value.text.trim(),
       skillIds: editingBullet.value.skillIds,
     }
@@ -340,7 +356,7 @@ function openEdit(item: any) {
       f[field.key] = item[field.key].map((t: any) => ({ name: t.name || t, icon: t.icon || '' }))
     } else if (field.type === 'category-multi' && Array.isArray(item[field.key])) {
       f[field.key] = [...item[field.key]]
-    } else if (field.key === 'featured') {
+    } else if (field.key === 'featured' || field.key === 'isPrivate') {
       f[field.key] = item[field.key] ? 'true' : 'false'
     } else {
       f[field.key] = item[field.key]
@@ -366,7 +382,7 @@ async function saveItem() {
         data[field.key] = Array.isArray(form.value[field.key]) ? form.value[field.key] : []
       } else if (field.type === 'category-multi') {
         data[field.key] = Array.isArray(form.value[field.key]) ? form.value[field.key] : []
-      } else if (field.key === 'featured') {
+      } else if (field.key === 'featured' || field.key === 'isPrivate') {
         data[field.key] = form.value[field.key] === 'true'
       } else {
         data[field.key] = form.value[field.key]
@@ -506,7 +522,7 @@ function toggleCategory(catId: string) {
 
             <!-- Bullet List (LinkEditor pattern) -->
             <div v-else-if="field.type === 'bullet-list'" class="space-y-2">
-              <div v-for="(b, i) in form.descriptions" :key="i"
+              <div v-for="(b, i) in form[field.key] || []" :key="i"
                 class="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800">
                 <template v-if="editingBullet?.index === i">
                   <div class="flex-1 space-y-2">
@@ -534,8 +550,8 @@ function toggleCategory(catId: string) {
                     </div>
                   </div>
                   <div class="flex items-center gap-1 ml-2 flex-shrink-0">
-                    <button @click="startEditBullet(i)" class="text-xs text-surface-400 hover:text-accent transition-colors cursor-pointer">Edit</button>
-                    <button @click="removeBullet(i)" type="button" class="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer">Remove</button>
+                    <button @click="startEditBullet(Number(i))" class="text-xs text-surface-400 hover:text-accent transition-colors cursor-pointer">Edit</button>
+                    <button @click="removeBullet(Number(i))" type="button" class="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer">Remove</button>
                   </div>
                 </template>
               </div>
@@ -568,7 +584,7 @@ function toggleCategory(catId: string) {
                   <Icon v-if="t.icon" :icon="t.icon" class="w-4 h-4 text-accent" />
                   <span class="font-medium">{{ t.name }}</span>
                 </div>
-                <button @click="removeTech(i)" type="button" class="text-red-500 hover:text-red-700 text-xs cursor-pointer">Remove</button>
+                <button @click="removeTech(Number(i))" type="button" class="text-red-500 hover:text-red-700 text-xs cursor-pointer">Remove</button>
               </div>
               <button v-if="!showTechForm" @click="showTechForm = true" type="button"
                 class="w-full py-2 rounded-lg border-2 border-dashed border-gray-300 dark:border-surface-600 text-sm text-surface-400 hover:border-accent/50 hover:text-accent transition-colors cursor-pointer">
@@ -611,7 +627,7 @@ function toggleCategory(catId: string) {
                     <option value="testing">Testing</option>
                     <option value="done">Done</option>
                   </select>
-                  <button @click="removeTimelineEntry(i)" type="button" class="text-red-500 text-xs px-2 cursor-pointer">&times;</button>
+                  <button @click="removeTimelineEntry(Number(i))" type="button" class="text-red-500 text-xs px-2 cursor-pointer">&times;</button>
                 </div>
                 <input v-model="entry.description" placeholder="Description" class="w-full px-2 py-1 rounded border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-xs outline-none" />
               </div>
@@ -645,8 +661,8 @@ function toggleCategory(catId: string) {
               <p class="font-medium text-sm">{{ form.title || 'Title' }}</p>
               <p v-if="form.subtitle" class="text-xs text-surface-500">{{ form.subtitle }}</p>
               <p v-if="form.description" class="text-xs text-surface-400 mt-1">{{ form.description }}</p>
-              <ul v-if="form.descriptions?.length" class="mt-1 space-y-0.5">
-                <li v-for="b in form.descriptions" :key="b.text" class="text-[11px] text-surface-500 flex items-start gap-1">
+              <ul v-if="(form.projectPoints || form.experiencePoints)?.length" class="mt-1 space-y-0.5">
+                <li v-for="b in (form.projectPoints || form.experiencePoints)" :key="b.text" class="text-[11px] text-surface-500 flex items-start gap-1">
                   <span class="text-accent mt-0.5">&bull;</span>
                   <span>{{ b.text }}</span>
                 </li>
@@ -729,7 +745,7 @@ function toggleCategory(catId: string) {
       <div v-if="(store ? (store as any).items?.value?.length : false)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div v-for="(item, i) in (store ? (store as any).items?.value : [])" :key="item.id"
           class="relative p-6 rounded-xl border overflow-hidden cursor-pointer"
-          :style="{ animationDelay: `${i * 0.08}s` }"
+          :style="{ animationDelay: `${Number(i) * 0.08}s` }"
           :class="[item.id === editing?.id ? 'ring-2 ring-accent' : '']"
           style="background-color: var(--color-surface); border-color: var(--color-border); animation: card-enter 0.45s ease both;"
           @click="openEdit(item)">
@@ -778,7 +794,7 @@ function toggleCategory(catId: string) {
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-200 dark:border-surface-700">
-              <th v-for="field in config.fields.filter(f => f.type !== 'image' && f.type !== 'links' && f.type !== 'timeline' && f.type !== 'bullet-list' && f.type !== 'tech-list' && f.key !== 'longDescription' && f.key !== 'description' && f.key !== 'descriptions')" :key="field.key"
+              <th v-for="field in visibleFields" :key="field.key"
                 class="text-left px-4 py-3 text-sm font-medium text-surface-500">
                 {{ field.label }}
               </th>
