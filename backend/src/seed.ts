@@ -254,17 +254,17 @@ async function seed() {
   // ── 3. Contacts ────────────────────────────────────────────────────────
   console.log('\n📞 Seeding contacts...');
   const contactData = [
-    { label: 'Phone number', value: '+33 7 64 02 11 78',        icon: 'mdi:telephone', type: 'info' },
-    { label: 'Email',        value: 'loanmata4@gmail.com',      icon: 'mdi:email',     type: 'info' },
-    { label: 'City',         value: 'Combaillaux, 34980',       icon: 'mdi:map-marker', type: 'info' },
-    { label: 'LinkedIn',     value: 'https://linkedin.com/in/loan-mata', icon: 'mdi:linkedin', type: 'link' },
-    { label: 'GitHub',       value: 'https://github.com/d3vex', icon: 'mdi:github',    type: 'link' },
+    { label: 'Phone number', value: '+33 7 64 02 11 78',        icon: 'mdi:telephone', type: 'info', isPrivate: false },
+    { label: 'Email',        value: 'loanmata4@gmail.com',      icon: 'mdi:email',     type: 'info', isPrivate: false },
+    { label: 'City',         value: 'Combaillaux, 34980',       icon: 'mdi:map-marker', type: 'info', isPrivate: true },
+    { label: 'LinkedIn',     value: 'https://linkedin.com/in/loan-mata', icon: 'mdi:linkedin', type: 'link', isPrivate: false },
+    { label: 'GitHub',       value: 'https://github.com/d3vex', icon: 'mdi:github',    type: 'link', isPrivate: false },
   ];
   for (let i = 0; i < contactData.length; i++) {
     const c = contactData[i];
     await em.query(
-      `INSERT INTO contacts (id, label, value, icon, type, "order") VALUES (?, ?, ?, ?, ?, ?)`,
-      [crypto.randomUUID(), c.label, c.value, c.icon, c.type, i]
+      `INSERT INTO contacts (id, label, value, icon, type, "isPrivate", "order") VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [crypto.randomUUID(), c.label, c.value, c.icon, c.type, c.isPrivate, i]
     );
     console.log(`   ✅ Contact: ${c.label}`);
   }
@@ -358,10 +358,10 @@ async function seed() {
   for (let i = 0; i < timelineExperiences.length; i++) {
     const e = timelineExperiences[i];
     const id = crypto.randomUUID();
-    const descriptions = JSON.stringify([{ text: e.description }]);
+    const tags = JSON.stringify(e.tags);
     await em.query(
-      `INSERT INTO experiences (id, title, company, "startDate", "endDate", descriptions, "order") VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, e.title, e.subtitle, e.startDate, e.endDate || null, descriptions, i]
+      `INSERT INTO experiences (id, title, company, "startDate", "endDate", description, tags, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, e.title, e.subtitle, e.startDate, e.endDate || null, e.description, tags, i]
     );
     experienceIds[e.id] = id;
     console.log(`   ✅ Experience: ${e.title} @ ${e.subtitle}`);
@@ -372,19 +372,43 @@ async function seed() {
   const projectIds: string[] = [];
   for (const mp of MOCK_PROJECTS) {
     const id = crypto.randomUUID();
-    const categoryIdsJson = JSON.stringify([categoryByName[mp.category]]);
     const technologiesJson = JSON.stringify(mp.technologies.map(t => ({ name: t })));
-    const timelineJson = JSON.stringify(mp.timeline);
+    const catId = categoryByName[mp.category];
     await em.query(
-      `INSERT INTO projects (id, title, description, "longDescription", technologies, "categoryIds", status, featured, "imageUrl", "liveUrl", "sourceUrl", timeline, "createdAt", "updatedAt", "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO projects (id, title, description, "longDescription", technologies, status, featured, "imageUrl", "liveUrl", "sourceUrl", "createdAt", "updatedAt", "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, mp.title, mp.description, mp.longDescription,
-        technologiesJson, categoryIdsJson,
+        technologiesJson,
         mp.status, mp.featured ? 1 : 0,
         mp.imageUrl || null, mp.liveUrl || null, mp.sourceUrl || null,
-        timelineJson, mp.createdAt, mp.updatedAt, projectIds.length,
+        mp.createdAt, mp.updatedAt, projectIds.length,
       ]
     );
+    if (catId) {
+      await em.query(
+        `INSERT INTO project_categories ("projectsId", "categoriesId") VALUES (?, ?)`,
+        [id, catId]
+      );
+    }
+    // Link project to skills by matching technology names
+    for (const techName of mp.technologies) {
+      const match = MOCK_SKILLS.find(
+        s => s.name.toLowerCase() === techName.toLowerCase()
+      );
+      if (match && skillIds[match.id]) {
+        await em.query(
+          `INSERT INTO project_skills ("projectsId", "skillsId") VALUES (?, ?)`,
+          [id, skillIds[match.id]]
+        );
+      }
+    }
+    for (let ti = 0; ti < mp.timeline.length; ti++) {
+      const t = mp.timeline[ti];
+      await em.query(
+        `INSERT INTO project_timeline_entries (id, date, title, description, status, "imageUrl", "projectId", "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [crypto.randomUUID(), t.date, t.title, t.description, t.status, t.imageUrl || null, id, ti]
+      );
+    }
     projectIds.push(id);
     console.log(`   ✅ Project: ${mp.title}`);
   }
@@ -392,21 +416,36 @@ async function seed() {
   // ── 11. CV ──────────────────────────────────────────────────────────────
   console.log('\n📄 Seeding CV...');
   const cvId = crypto.randomUUID();
+  const allSkillIds = Object.values(skillIds);
+  const allExperienceIds = Object.values(experienceIds);
+  const allEducationIds = Object.values(educationIds);
   await em.query(
-    `INSERT INTO cvs (id, name, specialization, "aboutText", "skillIds", "languageIds", "passionIds", "experienceIds", "projectIds", "educationIds", availability, "isDefault") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO cvs (id, name, specialization, "aboutText", availability, "isDefault") VALUES (?, ?, ?, ?, ?, ?)`,
     [
       cvId, 'Loan MATA', 'webdev',
       'I am a passionate Full-Stack developer and infrastructure enthusiast currently studying at Montpellier Ynov Campus. I have hands-on experience with Vue 3, TypeScript, Python, Docker, Kubernetes, and cloud technologies.',
-      JSON.stringify(Object.values(skillIds)),
-      JSON.stringify(languageIds),
-      JSON.stringify(passionIds),
-      JSON.stringify(Object.values(experienceIds)),
-      JSON.stringify(projectIds),
-      JSON.stringify(Object.values(educationIds)),
       "Recherche d'alternance: 1 sem ecole/ 2 semaine entreprise",
       1,
     ]
   );
+  for (const sid of allSkillIds) {
+    await em.query(`INSERT INTO cv_skills ("cvsId", "skillsId") VALUES (?, ?)`, [cvId, sid]);
+  }
+  for (const lid of languageIds) {
+    await em.query(`INSERT INTO cv_languages ("cvsId", "languagesId") VALUES (?, ?)`, [cvId, lid]);
+  }
+  for (const pid of passionIds) {
+    await em.query(`INSERT INTO cv_passions ("cvsId", "passionsId") VALUES (?, ?)`, [cvId, pid]);
+  }
+  for (const eid of allExperienceIds) {
+    await em.query(`INSERT INTO cv_experiences ("cvsId", "experiencesId") VALUES (?, ?)`, [cvId, eid]);
+  }
+  for (const pid of projectIds) {
+    await em.query(`INSERT INTO cv_projects ("cvsId", "projectsId") VALUES (?, ?)`, [cvId, pid]);
+  }
+  for (const eid of allEducationIds) {
+    await em.query(`INSERT INTO cv_education ("cvsId", "educationId") VALUES (?, ?)`, [cvId, eid]);
+  }
   console.log('   ✅ CV: Loan MATA (default)\n');
 
   // ── 12. Default User ────────────────────────────────────────────────────
