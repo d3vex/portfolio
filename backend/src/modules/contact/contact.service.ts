@@ -12,7 +12,12 @@ export class ContactService {
     private repo: Repository<Contact>,
   ) {}
 
-  findAll() { return this.repo.find({ order: { order: 'ASC' } }); }
+  findAll(includePrivate = false) {
+    if (includePrivate) {
+      return this.repo.find({ order: { order: 'ASC' } });
+    }
+    return this.repo.find({ where: { isPrivate: false }, order: { order: 'ASC' } });
+  }
 
   async findOne(id: string) {
     const entity = await this.repo.findOne({ where: { id } });
