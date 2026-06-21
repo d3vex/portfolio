@@ -8,13 +8,8 @@ import type { Skill } from '@/lib/types'
 const { t } = useI18n()
 const { data: skills, loading } = useAsyncData(() => getSkills())
 
-const activeCategory = ref<'all' | Skill['category']>('all')
-
-const filteredSkills = computed(() => {
-  if (!skills.value) return []
-  if (activeCategory.value === 'all') return skills.value
-  return skills.value.filter(s => s.category === activeCategory.value)
-})
+const hardSkills = computed(() => skills.value?.filter((s: Skill) => s.cvCategory === 'hard') || [])
+const softSkills = computed(() => skills.value?.filter((s: Skill) => s.cvCategory === 'soft') || [])
 
 // ── Terminal state ──────────────────────
 
@@ -44,7 +39,6 @@ const cmdBio = 'cat /home/loan_mata/bio.txt'
 onMounted(() => {
   setInterval(() => { cursor.value = !cursor.value }, 530)
 
-  // Both terminals animate simultaneously
   typeText(cmdInfo, (v) => { cmd1.value = v }, () => {
     typeText(infoFullText, (v) => { cmdOutput.value = v }, () => {})
   })
@@ -53,18 +47,7 @@ onMounted(() => {
     setTimeout(typeBio, 300)
   })
 
-  if (skills.value) {
-    const init: Record<string, number> = {}
-    skills.value.forEach(s => { init[s.id] = 0 })
-    widths.value = init
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const next: Record<string, number> = {}
-        skills.value!.forEach(s => { next[s.id] = s.level })
-        widths.value = next
-      })
-    })
-  }
+  initWidths()
 })
 
 function typeText(text: string, onChar: (v: string) => void, onDone: () => void) {
@@ -93,27 +76,23 @@ function typeBio() {
 
 const widths = ref<Record<string, number>>({})
 
-watch(skills, (val) => {
-  if (val) {
-    const init: Record<string, number> = {}
-    val.forEach(s => { init[s.id] = 0 })
-    widths.value = init
+function initWidths() {
+  if (!skills.value) return
+  const init: Record<string, number> = {}
+  skills.value.forEach((s: Skill) => { init[s.id] = 0 })
+  widths.value = init
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const next: Record<string, number> = {}
-        val.forEach(s => { next[s.id] = s.level })
-        widths.value = next
-      })
+      const next: Record<string, number> = {}
+      skills.value!.forEach((s: Skill) => { next[s.id] = s.level })
+      widths.value = next
     })
-  }
-})
+  })
+}
 
-const categories = [
-  { key: 'all' as const, label: 'projects.filters.all' },
-  { key: 'dev' as const, label: 'about.dev_title' },
-  { key: 'infra' as const, label: 'about.infra_title' },
-  { key: 'sysadmin' as const, label: 'about.infra_title' },
-]
+watch(skills, () => {
+  initWidths()
+})
 </script>
 
 <template>
@@ -184,45 +163,81 @@ const categories = [
         <h2 class="about_page__skills-title">{{ t('about.skills_title') }}</h2>
       </div>
 
-      <div class="about_page__filters">
-        <button
-          v-for="cat in categories"
-          :key="cat.key"
-          class="about_page__filter"
-          :class="{ 'about_page__filter--active': activeCategory === cat.key }"
-          @click="activeCategory = cat.key"
-        >
-          {{ t(cat.label) }}
-        </button>
-      </div>
-
       <div v-if="loading" class="about_page__loading">
         <div v-for="n in 4" :key="n" class="about_page__skeleton" />
       </div>
 
-      <TransitionGroup v-else name="blade" tag="div" class="about_page__blades">
-        <div
-          v-for="skill in filteredSkills"
-          :key="skill.id"
-          class="about_page__blade"
-        >
-          <div class="about_page__blade-led" />
-          <div class="about_page__blade-body">
-            <Icon :icon="skill.icon" class="w-4 h-4 text-accent flex-shrink-0" />
-            <span class="about_page__blade-name">{{ skill.name }}</span>
-            <div class="about_page__blade-bar">
-              <div
-                class="about_page__blade-fill"
-                :style="{ width: `${widths[skill.id] ?? 0}%` }"
-              />
+      <template v-else>
+        <div class="about_page__columns">
+          <!-- Hard Skills -->
+          <div class="about_page__group">
+            <div class="about_page__group-header">
+              <Icon icon="mdi:code-tags" class="w-5 h-5" />
+              <span class="about_page__group-title">Hard Skills</span>
+              <span class="about_page__group-count">{{ hardSkills.length }}</span>
             </div>
-            <span class="about_page__blade-pct">{{ skill.level }}%</span>
+            <TransitionGroup name="blade" tag="div" class="about_page__blades">
+              <div
+                v-for="skill in hardSkills"
+                :key="skill.id"
+                class="about_page__blade about_page__blade--hard"
+              >
+                <div class="about_page__blade-led about_page__blade-led--hard" />
+                <div class="about_page__blade-inner">
+                  <div class="about_page__blade-body">
+                    <Icon :icon="skill.icon" class="w-4 h-4 text-accent flex-shrink-0" />
+                    <span class="about_page__blade-name">{{ skill.name }}</span>
+                    <div class="about_page__blade-bar">
+                      <div
+                        class="about_page__blade-fill about_page__blade-fill--hard"
+                        :style="{ width: `${widths[skill.id] ?? 0}%` }"
+                      />
+                    </div>
+                    <span class="about_page__blade-pct about_page__blade-pct--hard">{{ skill.level }}%</span>
+                  </div>
+                  <div v-if="skill.keywords?.length" class="about_page__blade-tags">
+                    <span v-for="kw in skill.keywords" :key="kw" class="about_page__blade-tag">{{ kw }}</span>
+                  </div>
+                </div>
+              </div>
+            </TransitionGroup>
           </div>
-          <div class="about_page__blade-tags">
-            <span v-for="kw in skill.keywords" :key="kw" class="about_page__blade-tag">{{ kw }}</span>
+
+          <!-- Soft Skills -->
+          <div class="about_page__group">
+            <div class="about_page__group-header">
+              <Icon icon="mdi:account-group" class="w-5 h-5" />
+              <span class="about_page__group-title">Soft Skills</span>
+              <span class="about_page__group-count">{{ softSkills.length }}</span>
+            </div>
+            <TransitionGroup name="blade" tag="div" class="about_page__blades">
+              <div
+                v-for="skill in softSkills"
+                :key="skill.id"
+                class="about_page__blade about_page__blade--soft"
+              >
+                <div class="about_page__blade-led about_page__blade-led--soft" />
+                <div class="about_page__blade-inner">
+                  <div class="about_page__blade-body">
+                    <Icon :icon="skill.icon" class="w-4 h-4 text-secondary flex-shrink-0" />
+                    <span class="about_page__blade-name">{{ skill.name }}</span>
+                    <div class="about_page__blade-bar">
+                      <div
+                        class="about_page__blade-fill about_page__blade-fill--soft"
+                        :style="{ width: `${widths[skill.id] ?? 0}%` }"
+                      />
+                    </div>
+                    <span class="about_page__blade-pct about_page__blade-pct--soft">{{ skill.level }}%</span>
+                  </div>
+                  <div v-if="skill.keywords?.length" class="about_page__blade-tags">
+                    <span v-for="kw in skill.keywords" :key="kw" class="about_page__blade-tag">{{ kw }}</span>
+                  </div>
+                </div>
+              </div>
+            </TransitionGroup>
           </div>
         </div>
-      </TransitionGroup>
+      </template>
     </div>
   </section>
 </template>
@@ -323,24 +338,10 @@ const categories = [
     color: var(--color-text);
   }
 
-  // ── Final status ──────────────────────
-
-  &__final {
-    @apply mt-4 font-mono text-xs flex items-center gap-2;
-    color: var(--color-text-secondary);
-    opacity: 0.6;
-    animation: fade-up 0.4s ease-out;
-  }
-
-  &__final-check {
-    color: #00ff88;
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
   // ── Skills ───────────────────────────
 
   &__skills {
-    @apply max-w-2xl mx-auto;
+    @apply max-w-5xl mx-auto;
   }
 
   &__skills-head {
@@ -358,24 +359,33 @@ const categories = [
     color: var(--color-text);
   }
 
-  &__filters {
-    @apply flex items-center justify-center gap-2 mb-10 flex-wrap;
+  // ── Columns ──────────────────────────
+
+  &__columns {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
   }
 
-  &__filter {
-    @apply px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200;
-    color: var(--color-text-secondary);
+  // ── Skill group ──────────────────────
+
+  &__group {
+    @apply min-w-0;
+  }
+
+  &__group-header {
+    @apply flex items-center gap-2 mb-4 pb-2 border-b;
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  &__group-title {
+    @apply text-base font-heading font-semibold;
+  }
+
+  &__group-count {
+    @apply ml-auto text-xs font-mono px-2 py-0.5 rounded-full;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
-
-    &:hover {
-      color: var(--color-text);
-      border-color: var(--color-accent);
-    }
-
-    &--active {
-      @apply bg-accent text-white border-accent;
-    }
+    color: var(--color-text-secondary);
   }
 
   &__loading {
@@ -395,24 +405,39 @@ const categories = [
   }
 
   &__blade {
-    @apply flex items-center rounded-lg border overflow-hidden transition-all duration-300;
+    @apply flex rounded-lg border overflow-hidden transition-all duration-300;
     background-color: var(--color-surface);
     border-color: var(--color-border);
     animation: blade-in 0.35s ease-out both;
 
-    &:hover {
+    &--hard:hover {
       border-color: var(--color-accent);
       background: color-mix(in srgb, var(--color-surface) 90%, var(--color-accent));
     }
+
+    &--soft:hover {
+      border-color: #a855f7;
+      background: color-mix(in srgb, var(--color-surface) 90%, rgba(168, 85, 247, 0.08));
+    }
+  }
+
+  &__blade-inner {
+    @apply flex flex-col flex-1 min-w-0;
   }
 
   &__blade-led {
     width: 3px;
     flex-shrink: 0;
-    align-self: stretch;
-    background: var(--color-accent);
     opacity: 0.5;
     transition: opacity 0.3s;
+
+    &--hard {
+      background: var(--color-accent);
+    }
+
+    &--soft {
+      background: #a855f7;
+    }
 
     .about_page__blade:hover & {
       opacity: 1;
@@ -420,33 +445,47 @@ const categories = [
   }
 
   &__blade-body {
-    @apply flex items-center gap-2.5 px-4 py-2.5 flex-1 min-w-0;
+    @apply flex items-center gap-2 px-3 py-2 flex-1 min-w-0;
   }
 
   &__blade-name {
-    @apply font-heading font-semibold text-sm flex-shrink-0;
+    @apply font-heading font-semibold text-xs flex-shrink-0;
     color: var(--color-text);
-    min-width: 80px;
+    min-width: 60px;
   }
 
   &__blade-bar {
-    @apply flex-1 h-[6px] rounded-full overflow-hidden;
+    @apply flex-1 h-[5px] rounded-full overflow-hidden;
     background-color: var(--color-bg);
-    min-width: 60px;
+    min-width: 40px;
   }
 
   &__blade-fill {
     @apply h-full rounded-full transition-all duration-1000 ease-out;
-    background: var(--color-accent);
+
+    &--hard {
+      background: var(--color-accent);
+    }
+
+    &--soft {
+      background: #a855f7;
+    }
   }
 
   &__blade-pct {
-    @apply font-mono text-xs font-bold flex-shrink-0 w-10 text-right;
-    color: var(--color-accent);
+    @apply font-mono text-[10px] font-bold flex-shrink-0 w-8 text-right;
+
+    &--hard {
+      color: var(--color-accent);
+    }
+
+    &--soft {
+      color: #a855f7;
+    }
   }
 
   &__blade-tags {
-    @apply hidden lg:flex items-center gap-1 pr-4;
+    @apply flex items-center flex-wrap gap-1 px-3 pb-2;
   }
 
   &__blade-tag {
