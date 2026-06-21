@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Project } from '../../project/entities/project.entity';
 
 @Entity('education')
 export class Education {
@@ -23,16 +24,13 @@ export class Education {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'simple-json', nullable: true })
-  descriptions: string[];
-
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'json', nullable: true })
   tags: string[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  projectIds: string[];
+  @OneToMany(() => Project, project => project.education)
+  projects: Project[];
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   order: number;
 
   @CreateDateColumn()

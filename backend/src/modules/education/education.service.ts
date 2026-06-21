@@ -9,10 +9,12 @@ import { UpdateEducationDto } from './dto/update-education.dto';
 export class EducationService {
   constructor(@InjectRepository(Education) private repo: Repository<Education>) {}
 
-  findAll() { return this.repo.find({ order: { order: 'ASC' } }); }
+  findAll() {
+    return this.repo.find({ relations: { projects: true }, order: { order: 'ASC' } });
+  }
 
   async findOne(id: string) {
-    const entity = await this.repo.findOne({ where: { id } });
+    const entity = await this.repo.findOne({ where: { id }, relations: { projects: true } });
     if (!entity) throw new NotFoundException('Education not found');
     return entity;
   }
