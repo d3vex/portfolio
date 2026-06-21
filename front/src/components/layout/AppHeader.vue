@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
@@ -19,10 +19,6 @@ const navItems = [
 
 function navigate(path: string) {
   router.push(path)
-}
-
-function toggleLang() {
-  locale.value = locale.value === 'en' ? 'fr' : 'en'
 }
 </script>
 
@@ -50,28 +46,11 @@ function toggleLang() {
       <div class="app_header__actions">
         <button
           class="app_header__action"
-          :title="t('language.switch')"
-          @click="toggleLang"
-        >
-          <Icon icon="mdi:translate" class="w-5 h-5" />
-          <span class="text-xs font-mono">{{ locale === 'en' ? 'EN' : 'FR' }}</span>
-        </button>
-
-        <button
-          class="app_header__action"
           :title="t('theme.toggle')"
           @click="appStore.toggleTheme()"
         >
           <Icon v-if="appStore.isDark" icon="mdi:weather-sunny" class="w-5 h-5" />
           <Icon v-else icon="mdi:weather-night" class="w-5 h-5" />
-        </button>
-
-        <button
-          class="app_header__action app_header__action--terminal"
-          :title="t('terminal.prompt')"
-          @click="appStore.toggleTerminal()"
-        >
-          <Icon icon="mdi:console" class="w-5 h-5" />
         </button>
       </div>
     </nav>
@@ -125,9 +104,6 @@ function toggleLang() {
       @apply bg-zinc-800/30 dark:bg-zinc-200/30;
     }
 
-    &--terminal {
-      @apply bg-accent/10 text-accent hover:bg-accent/20;
-    }
   }
 }
 </style>

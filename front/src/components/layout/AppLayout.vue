@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
-import TerminalModal from '@/components/terminal/TerminalModal.vue'
 import ParticleNetwork from '@/components/3d/ParticleNetwork.vue'
 
 const route = useRoute()
@@ -20,7 +19,6 @@ const isAdmin = computed(() => route.path.startsWith('/admin'))
       <slot />
     </main>
     <AppFooter />
-    <TerminalModal />
   </div>
 </template>
 
