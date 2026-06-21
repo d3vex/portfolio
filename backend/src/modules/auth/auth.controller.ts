@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
