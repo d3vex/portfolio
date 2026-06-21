@@ -78,6 +78,10 @@ export class CreateProjectDto {
   timeline?: { date: string; title: string; description: string; status: string; imageUrl?: string }[];
 
   @IsOptional()
+  @IsArray()
+  projectPoints?: { text: string; skillIds?: string[] }[];
+
+  @IsOptional()
   @IsString()
   educationId?: string;
 
