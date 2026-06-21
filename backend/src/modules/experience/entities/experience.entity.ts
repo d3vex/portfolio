@@ -1,4 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Skill } from '../../skill/entities/skill.entity';
+import { Image } from '../../images/entities/image.entity';
+import { Link } from '../../project/entities/link.entity';
+import { ExperiencePoint } from './experience-point.entity';
 
 @Entity('experiences')
 export class Experience {
@@ -17,25 +21,36 @@ export class Experience {
   @Column({ nullable: true })
   location: string;
 
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
   @Column({ nullable: true })
   startDate: string;
 
   @Column({ nullable: true })
   endDate: string;
 
-  @Column({ type: 'simple-json', nullable: true })
-  descriptions: { text: string; skillIds?: string[] }[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'experience_skills' })
+  skills: Skill[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  skillIds: string[];
+  @Column({ type: 'json', nullable: true })
+  tags: string[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  links: { label: string; url: string; icon?: string; type?: string }[];
+  @OneToMany(() => Link, link => link.experience, { cascade: true, orphanedRowAction: 'delete' })
+  links: Link[];
+
+  @OneToMany(() => ExperiencePoint, point => point.experience, { cascade: true, orphanedRowAction: 'delete' })
+  experiencePoints: ExperiencePoint[];
 
   @Column({ nullable: true })
   imageId: string;
 
-  @Column({ default: 0 })
+  @ManyToOne(() => Image)
+  @JoinColumn({ name: 'imageId' })
+  image: Image;
+
+  @Column({ type: 'int', default: 0 })
   order: number;
 
   @CreateDateColumn()
