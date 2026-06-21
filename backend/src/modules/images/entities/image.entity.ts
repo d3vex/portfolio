@@ -14,7 +14,7 @@ export class Image {
   @Column({ nullable: true })
   originalName: string;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   size: number;
 
   @CreateDateColumn()

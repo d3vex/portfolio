@@ -11,6 +11,6 @@ export class Language {
   @Column()
   level: string;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   order: number;
 }
