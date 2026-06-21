@@ -27,6 +27,7 @@ export interface Skill {
   id: string
   name: string
   category: 'dev' | 'infra' | 'sysadmin'
+  cvCategory: 'hard' | 'soft'
   level: number
   icon: string
   keywords: string[]
