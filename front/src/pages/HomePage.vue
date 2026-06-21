@@ -1,35 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '@/stores/app'
 import AppButton from '@/components/ui/AppButton.vue'
 
 const { t } = useI18n()
 const router = useRouter()
-const appStore = useAppStore()
-
-const typedText = ref('')
-const fullText = '> systemctl start portfolio.service'
-const showCursor = ref(true)
-
-
-onMounted(() => {
-  let i = 0
-  const interval = setInterval(() => {
-    if (i < fullText.length) {
-      typedText.value += fullText[i]!
-      i++
-    } else {
-      clearInterval(interval)
-    }
-  }, 50)
-
-  setInterval(() => {
-    showCursor.value = !showCursor.value
-  }, 500)
-
-})
 </script>
 
 <template>
@@ -67,11 +42,6 @@ onMounted(() => {
     </div>
 
     <div class="home_hero__content">
-      <div class="home_hero__terminal-line">
-        <span class="text-cyber-green font-mono text-sm">{{ typedText }}</span>
-        <span class="text-cyber-green font-mono text-sm" :class="{ 'opacity-0': !showCursor }">|</span>
-      </div>
-
       <p class="home_hero__greeting">{{ t('hero.greeting') }}</p>
       <h1 class="home_hero__name">{{ t('hero.name') }}</h1>
       <p class="home_hero__tagline">{{ t('hero.tagline') }}</p>
@@ -110,12 +80,6 @@ onMounted(() => {
           {{ t('hero.cta_secondary') }}
         </AppButton>
       </div>
-
-      <p class="home_hero__hint" @click="appStore.toggleTerminal()">
-        <Icon icon="mdi:console" class="w-4 h-4 inline" />
-        {{ t('hero.terminal_hint') }}
-        <Icon icon="mdi:open-in-new" class="w-3 h-3 inline" />
-      </p>
     </div>
   </section>
 </template>
@@ -272,10 +236,6 @@ $slot-size: 14px;
     > * {
       position: relative;
     }
-  }
-
-  &__terminal-line {
-    @apply mb-3 h-6;
   }
 
   &__statuses {

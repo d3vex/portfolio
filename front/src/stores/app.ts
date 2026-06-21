@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 
 export const useAppStore = defineStore('app', () => {
   const theme = ref<'light' | 'dark'>('dark')
-  const terminalOpen = ref(false)
 
   const isDark = computed(() => theme.value === 'dark')
 
@@ -26,10 +25,6 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  function toggleTerminal() {
-    terminalOpen.value = !terminalOpen.value
-  }
-
   function initTheme() {
     const saved = localStorage.getItem('theme') as 'light' | 'dark' | null
     if (saved) {
@@ -43,10 +38,8 @@ export const useAppStore = defineStore('app', () => {
   return {
     theme,
     isDark,
-    terminalOpen,
     toggleTheme,
     setTheme,
-    toggleTerminal,
     initTheme,
   }
 })
