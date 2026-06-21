@@ -17,13 +17,15 @@ const contacts = ref<any[]>([])
 const loading = ref(true)
 
 const linkedData = computed(() => {
-  const selectedProjects = projects.value.filter(p => cv.value?.projectIds?.includes(p.id))
-  const selectedEducation = education.value.filter(e => cv.value?.educationIds?.includes(e.id))
+  if (!cv.value) return { skills: [], languages: [], passions: [], experiences: [], projects: [], education: [] }
+  const cvIds = (key: string) => (cv.value?.[key] || []).map((e: any) => e.id)
+  const selectedProjects = projects.value.filter(p => cvIds('projects').includes(p.id))
+  const selectedEducation = education.value.filter(e => cvIds('education').includes(e.id))
   return {
-    skills: skills.value.filter(s => cv.value?.skillIds?.includes(s.id)),
-    languages: languages.value.filter(l => cv.value?.languageIds?.includes(l.id)),
-    passions: passions.value.filter(p => cv.value?.passionIds?.includes(p.id)),
-    experiences: experiences.value.filter(e => cv.value?.experienceIds?.includes(e.id)),
+    skills: skills.value.filter(s => cvIds('skills').includes(s.id)),
+    languages: languages.value.filter(l => cvIds('languages').includes(l.id)),
+    passions: passions.value.filter(p => cvIds('passions').includes(p.id)),
+    experiences: experiences.value.filter(e => cvIds('experiences').includes(e.id)),
     projects: selectedProjects,
     education: selectedEducation.map(e => ({
       ...e,
@@ -100,6 +102,10 @@ function buildPrintHtml(): string {
     return ids.map(id => skillMap[id]?.name).filter(Boolean).join(', ')
   }
 
+  function pts(entity: any, key: string): any[] {
+    return entity?.[key] || []
+  }
+
   function desc(d: any): string {
     return d.text || d || ''
   }
@@ -142,7 +148,7 @@ function buildPrintHtml(): string {
   const aboutSection = aboutHtml ? `<section><h2>À Propos</h2><div class="about-text"><p>${aboutHtml}</p></div></section>` : ''
 
   const expHtml = linkedData.value.experiences.map(exp => {
-    const items = (exp.descriptions || []).map((d: any) => {
+    const items = pts(exp, 'experiencePoints').map((d: any) => {
       const txt = desc(d)
       const ref = d.skillIds?.length ? ` <span class="skill-ref">— ${skillN(d.skillIds)}</span>` : ''
       return `<li>${es(txt)}${ref}</li>`
@@ -155,7 +161,14 @@ function buildPrintHtml(): string {
   }).join('\n      ')
 
   const projHtml = linkedData.value.projects.map(proj => {
-    const items = (proj.descriptions || []).map((d: any) => {
+    const pBullets = (() => {
+      const map = c.projectBullets
+      if (!map) return pts(proj, 'projectPoints')
+      const sel = map[proj.id]
+      if (sel === undefined) return pts(proj, 'projectPoints')
+      return pts(proj, 'projectPoints').filter((_: any, i: number) => sel.includes(i))
+    })()
+    const items = pBullets.map((d: any) => {
       const txt = desc(d)
       const ref = d.skillIds?.length ? ` <span class="skill-ref">— ${skillN(d.skillIds)}</span>` : ''
       return `<li>${es(txt)}${ref}</li>`
@@ -233,6 +246,18 @@ function zoomOut() { pictureZoom.value = Math.max(0.5, Number((pictureZoom.value
 const picStyle = computed(() => ({
   transform: `scale(${pictureZoom.value})`,
 }))
+
+function selectedProjectPoints(proj: any): any[] {
+  const map = cv.value?.projectBullets
+  if (!map) return proj.projectPoints || []
+  const selected = map[proj.id]
+  if (selected === undefined) return proj.projectPoints || []
+  return (proj.projectPoints || []).filter((_: any, i: number) => selected.includes(i))
+}
+
+function hostname(url: string): string {
+  try { return new URL(url).hostname } catch { return url }
+}
 </script>
 
 <template>
@@ -341,15 +366,15 @@ const picStyle = computed(() => ({
                   {{ exp.company }}
                   <a v-if="exp.companyUrl" :href="exp.companyUrl" target="_blank" class="exp-link">
                     <Icon icon="mdi:external-link" class="w-3 h-3" />
-                    {{ new URL(exp.companyUrl).hostname }}
+                    {{ hostname(exp.companyUrl) }}
                   </a>
                 </div>
               </div>
               <span class="exp-date">{{ formatDate(exp.startDate) }} - {{ formatDate(exp.endDate) }}</span>
             </div>
             <p v-if="exp.location" class="exp-place">{{ exp.location }}</p>
-            <ul v-if="exp.descriptions?.length" class="exp-desc">
-              <li v-for="(d, i) in exp.descriptions" :key="i">
+            <ul v-if="exp.experiencePoints?.length" class="exp-desc">
+              <li v-for="(d, i) in exp.experiencePoints" :key="i">
                 {{ descriptionText(d) }}
                 <span v-if="d.skillIds?.length" class="skill-ref">— {{ skillNamesByIds(d.skillIds).join(', ') }}</span>
               </li>
@@ -377,8 +402,8 @@ const picStyle = computed(() => ({
             </div>
             <span class="exp-date">{{ formatDate(proj.startDate) }} - {{ formatDate(proj.endDate) }}</span>
             </div>
-            <ul v-if="proj.descriptions?.length" class="exp-desc">
-              <li v-for="(d, i) in proj.descriptions" :key="i">
+            <ul v-if="selectedProjectPoints(proj).length" class="exp-desc">
+              <li v-for="(d, i) in selectedProjectPoints(proj)" :key="i">
                 {{ descriptionText(d) }}
                 <span v-if="d.skillIds?.length" class="skill-ref">— {{ skillNamesByIds(d.skillIds).join(', ') }}</span>
               </li>

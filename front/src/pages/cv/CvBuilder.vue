@@ -25,6 +25,7 @@ const form = ref({
   experienceIds: [] as string[],
   projectIds: [] as string[],
   educationIds: [] as string[],
+  projectBullets: {} as Record<string, number[]>,
 })
 
 const skills = ref<any[]>([])
@@ -66,20 +67,44 @@ onMounted(async () => {
       aboutText: cv.aboutText || '',
       availability: cv.availability || '',
       pictureId: cv.pictureId || '',
-      skillIds: cv.skillIds || [],
-      languageIds: cv.languageIds || [],
-      passionIds: cv.passionIds || [],
-      experienceIds: cv.experienceIds || [],
-      projectIds: cv.projectIds || [],
-      educationIds: cv.educationIds || [],
+      skillIds: cv.skills?.map((s: any) => s.id) || [],
+      languageIds: cv.languages?.map((l: any) => l.id) || [],
+      passionIds: cv.passions?.map((p: any) => p.id) || [],
+      experienceIds: cv.experiences?.map((e: any) => e.id) || [],
+      projectIds: cv.projects?.map((p: any) => p.id) || [],
+      educationIds: cv.education?.map((e: any) => e.id) || [],
+      projectBullets: cv.projectBullets || {},
     }
   }
 })
 
 function toggle(arr: string[], id: string) {
   const idx = arr.indexOf(id)
-  if (idx > -1) arr.splice(idx, 1)
-  else arr.push(id)
+  if (idx > -1) {
+    arr.splice(idx, 1)
+  } else {
+    arr.push(id)
+    const proj = projects.value.find(p => p.id === id)
+    if (proj?.projectPoints?.length) {
+      form.value.projectBullets[id] = proj.projectPoints.map((_: any, i: number) => i)
+    }
+  }
+}
+
+function toggleBullet(projectId: string, idx: number) {
+  const bullets = form.value.projectBullets[projectId]
+  if (!bullets) return
+  const pos = bullets.indexOf(idx)
+  if (pos > -1) bullets.splice(pos, 1)
+  else bullets.push(idx)
+}
+
+function previewProjBullets(proj: any): any[] {
+  const map = form.value.projectBullets
+  if (!map) return proj.projectPoints || []
+  const sel = map[proj.id]
+  if (sel === undefined) return proj.projectPoints || []
+  return (proj.projectPoints || []).filter((_: any, i: number) => sel.includes(i))
 }
 
 async function save() {
@@ -115,6 +140,15 @@ function formatAbout(text: string): string {
   let html = text.replace(/\n/g, '<br>')
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   return html
+}
+
+function formatDate(d: string | null | undefined): string {
+  if (!d) return ''
+  try {
+    return new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric' }).format(new Date(d))
+  } catch {
+    return d
+  }
 }
 
 const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects', 'Education', 'Preview']
@@ -272,15 +306,25 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
         <div>
           <p class="text-sm font-medium mb-3">Projects</p>
           <div class="space-y-2">
-            <button v-for="item in projects" :key="item.id"
-              @click="toggle(form.projectIds, item.id)"
-              class="w-full text-left px-4 py-3 rounded-xl border text-sm transition-all cursor-pointer"
-              :class="form.projectIds.includes(item.id)
-                ? 'bg-accent/10 border-accent text-accent'
-                : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
-              <span class="font-medium">{{ item.title }}</span>
-              <span v-if="item.subtitle" class="text-surface-500"> - {{ item.subtitle }}</span>
-            </button>
+            <template v-for="item in projects" :key="item.id">
+              <button @click="toggle(form.projectIds, item.id)"
+                class="w-full text-left px-4 py-3 rounded-xl border text-sm transition-all cursor-pointer"
+                :class="form.projectIds.includes(item.id)
+                  ? 'bg-accent/10 border-accent text-accent'
+                  : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
+                <span class="font-medium">{{ item.title }}</span>
+                <span v-if="item.subtitle" class="text-surface-500"> - {{ item.subtitle }}</span>
+              </button>
+              <div v-if="form.projectIds.includes(item.id) && item.projectPoints?.length" class="ml-4 pl-3 border-l-2 border-accent/30 space-y-1 py-1">
+                <label v-for="(d, i) in item.projectPoints" :key="i"
+                  class="flex items-start gap-2 text-xs cursor-pointer py-0.5">
+                  <input type="checkbox" :checked="form.projectBullets[String(item.id)]?.includes(Number(i)) ?? true"
+                    @change="toggleBullet(String(item.id), Number(i))"
+                    class="mt-0.5 accent-accent cursor-pointer" />
+                  <span class="text-surface-600 dark:text-surface-400">{{ d.text || d }}</span>
+                </label>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -305,128 +349,133 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
       <!-- Step 6: Preview -->
       <div v-if="step === 6">
         <p class="text-sm text-surface-500 mb-4">Review your CV before saving</p>
-        <div class="border border-gray-200 dark:border-surface-700 rounded-xl overflow-hidden" style="display:grid;grid-template-columns:280px 1fr">
-          <div class="p-5" style="background:#18181B;color:#E4E4E7">
-            <div class="text-center mb-5">
-              <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden" style="background:rgba(255,255,255,0.06);border:2px solid #2563EB">
+        <div class="rounded-xl overflow-hidden" style="display:grid;grid-template-columns:320px 1fr;max-width:1240px;margin:0 auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);min-height:1100px">
+          <div style="background:#18181B;color:#E4E4E7;padding:40px 28px;display:flex;flex-direction:column;gap:20px">
+            <div class="text-center">
+              <div style="width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.06);border:3px solid #2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;overflow:hidden">
                 <img v-if="linkedPreview.pictureId" :src="`http://localhost:3001/api/images/${linkedPreview.pictureId}`" class="w-full h-full object-cover" />
-                <span v-else class="text-lg font-bold" style="color:#3B82F6">LM</span>
+                <span v-else style="font-family:'Archivo',sans-serif;font-size:30px;font-weight:800;color:#3B82F6">LM</span>
               </div>
-              <h3 class="font-heading font-bold text-white text-base">{{ form.titleOverride || form.specialization || 'Professional' }}</h3>
-              <div v-if="linkedPreview.availability" class="mt-2 text-xs px-3 py-1.5 rounded" style="background:rgba(37,99,235,0.15);color:#3B82F6;border:1px solid rgba(37,99,235,0.2)">{{ linkedPreview.availability }}</div>
+              <span style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;background:#2563EB;color:#fff;padding:4px 12px;border-radius:100px;margin-bottom:8px;text-align:center">{{ form.titleOverride || form.specialization || 'Professional' }}</span>
+              <div v-if="linkedPreview.availability" style="margin-top:8px;font-size:13px;font-weight:500;padding:6px 14px;border-radius:8px;width:100%;background:rgba(37,99,235,0.15);color:#3B82F6;border:1px solid rgba(37,99,235,0.2);text-align:center">{{ linkedPreview.availability }}</div>
             </div>
-            <div v-if="linkedPreview.contacts.length" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:0.4rem">Contact</p>
-              <div v-for="c in linkedPreview.contacts" :key="c.id" class="flex items-center gap-2 text-xs mb-2">
-                <Icon v-if="c.icon" :icon="c.icon" class="w-4 h-4 flex-shrink-0" />
+            <div v-if="linkedPreview.contacts.length">
+              <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:6px;margin-bottom:10px;font-family:'Archivo',sans-serif">Contact</p>
+              <div v-for="c in linkedPreview.contacts" :key="c.id" style="display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:12px">
+                <Icon v-if="c.icon" :icon="c.icon" style="width:16px;height:16px;flex-shrink:0;opacity:0.6" />
                 <a v-if="c.type === 'link'" :href="c.value.startsWith('http') ? c.value : 'https://' + c.value" target="_blank" style="color:#E4E4E7;text-decoration:none" @click.stop>{{ c.value.replace(/^https?:\/\//, '').replace(/\/$/, '') }}</a>
                 <span v-else>{{ c.value }}</span>
               </div>
             </div>
-            <div v-if="linkedPreview.skills.filter(s => s.cvCategory === 'hard').length" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:0.4rem">Hard Skills</p>
-              <div class="flex flex-wrap gap-1">
+            <div v-if="linkedPreview.skills.filter(s => s.cvCategory === 'hard').length">
+              <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:6px;margin-bottom:10px;font-family:'Archivo',sans-serif">Hard Skills</p>
+              <div style="display:flex;flex-wrap:wrap;gap:4px">
                 <span v-for="s in linkedPreview.skills.filter(s => s.cvCategory === 'hard')" :key="s.id"
-                  class="px-2 py-0.5 text-xs rounded flex items-center gap-1" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08)">
-                  <Icon v-if="s.icon" :icon="s.icon" class="w-3 h-3" />
+                  style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:14px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);margin:3px">
+                  <Icon v-if="s.icon" :icon="s.icon" style="width:16px;height:16px" />
                   {{ s.name }}
                 </span>
               </div>
             </div>
-            <div v-if="linkedPreview.skills.filter(s => s.cvCategory === 'soft').length" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:0.4rem">Soft Skills</p>
-              <div v-for="s in linkedPreview.skills.filter(s => s.cvCategory === 'soft')" :key="s.id" class="flex items-start gap-2 py-1" style="border-bottom:1px solid rgba(255,255,255,0.05)">
-                <span class="w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0" style="background:#2563EB" />
+            <div v-if="linkedPreview.skills.filter(s => s.cvCategory === 'soft').length">
+              <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:6px;margin-bottom:10px;font-family:'Archivo',sans-serif">Soft Skills</p>
+              <div v-for="s in linkedPreview.skills.filter(s => s.cvCategory === 'soft')" :key="s.id" style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                <span style="width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;background:#2563EB" />
                 <div>
-                  <span class="text-xs text-white block">{{ s.name }}</span>
-                  <span v-if="s.description" class="text-[10px]" style="color:rgba(255,255,255,0.6)">{{ s.description }}</span>
+                  <span style="font-size:14px;color:#fff;display:block">{{ s.name }}</span>
+                  <span v-if="s.description" style="font-size:13px;color:rgba(255,255,255,0.6)">{{ s.description }}</span>
                 </div>
               </div>
             </div>
-            <div v-if="linkedPreview.languages.length" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:0.4rem">Langues</p>
-              <div v-for="l in linkedPreview.languages" :key="l.id" class="flex justify-between text-xs py-0.5">
+            <div v-if="linkedPreview.languages.length">
+              <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:6px;margin-bottom:10px;font-family:'Archivo',sans-serif">Langues</p>
+              <div v-for="l in linkedPreview.languages" :key="l.id" style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0;font-weight:500">
                 <span>{{ l.name }}</span>
-                <span class="text-xs px-1.5 py-0.5 rounded-full" style="color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)">{{ l.level }}</span>
+                <span style="padding:2px 8px;border-radius:100px;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06);font-size:14px">{{ l.level }}</span>
               </div>
             </div>
             <div v-if="linkedPreview.passions.length">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:0.4rem">Passions</p>
-              <div v-for="p in linkedPreview.passions" :key="p.id" class="flex items-start gap-2 py-1" style="border-bottom:1px solid rgba(255,255,255,0.05)">
-                <Icon v-if="p.icon" :icon="p.icon" class="w-3.5 h-3.5 mt-0.5" style="color:#3B82F6" />
+              <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#3B82F6;border-bottom:2px solid rgba(255,255,255,0.08);padding-bottom:6px;margin-bottom:10px;font-family:'Archivo',sans-serif">Passions</p>
+              <div v-for="p in linkedPreview.passions" :key="p.id" style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                <Icon v-if="p.icon" :icon="p.icon" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;color:#3B82F6" />
                 <div>
-                  <span class="text-xs text-white block">{{ p.name }}</span>
-                  <span v-if="p.description" class="text-[10px]" style="color:rgba(255,255,255,0.6)">{{ p.description }}</span>
+                  <span style="font-size:15px;color:#fff;display:block">{{ p.name }}</span>
+                  <span v-if="p.description" style="font-size:13px;color:rgba(255,255,255,0.6)">{{ p.description }}</span>
                 </div>
               </div>
             </div>
           </div>
-          <div class="flex-1 p-5" style="background:#FAFAFA">
-            <div v-if="form.aboutText" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#18181B;display:flex;align-items:center;gap:0.5rem">
+          <div style="background:#FAFAFA;padding:40px 40px 40px 32px;display:flex;flex-direction:column;gap:30px">
+            <div v-if="form.aboutText">
+              <p style="font-size:18px;font-weight:700;font-family:'Archivo',sans-serif;color:#18181B;display:flex;align-items:center;gap:0.5rem;margin-bottom:14px">
                 À Propos
                 <span style="flex:1;height:2px;background:linear-gradient(90deg,#2563EB 0%,transparent 100%)" />
               </p>
-              <p class="text-xs leading-relaxed" style="color:#3F3F46" v-html="formatAbout(form.aboutText)"></p>
+              <p style="font-size:14px;line-height:1.8;color:#3F3F46" v-html="formatAbout(form.aboutText)"></p>
             </div>
-            <div v-if="linkedPreview.experiences.length" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-3" style="color:#18181B;display:flex;align-items:center;gap:0.5rem">
-                Expériences
+            <div v-if="linkedPreview.experiences.length">
+              <p style="font-size:18px;font-weight:700;font-family:'Archivo',sans-serif;color:#18181B;display:flex;align-items:center;gap:0.5rem;margin-bottom:14px">
+                Expériences Professionnelles
                 <span style="flex:1;height:2px;background:linear-gradient(90deg,#2563EB 0%,transparent 100%)" />
               </p>
-              <div v-for="exp in linkedPreview.experiences" :key="exp.id" class="mb-3" style="padding-left:1.2rem;border-left:2px solid #E4E4E7;position:relative">
-                <span style="position:absolute;left:-5px;top:5px;width:7px;height:7px;border-radius:50%;background:#2563EB" />
+              <div v-for="exp in linkedPreview.experiences" :key="exp.id" style="padding-left:20px;border-left:2px solid #E4E4E7;position:relative;margin-bottom:20px">
+                <span style="position:absolute;left:-5px;top:6px;width:8px;height:8px;border-radius:50%;background:#2563EB" />
                 <div class="flex items-start justify-between flex-wrap gap-1">
                   <div>
-                    <span class="font-bold text-xs" style="color:#18181B">{{ exp.title }}</span>
-                    <span class="text-xs font-semibold ml-1 px-1.5 py-0.5 rounded-full text-white" style="background:#2563EB">{{ exp.company }}</span>
+                    <span style="font-size:16px;font-weight:700;color:#18181B">{{ exp.title }}</span>
+                    <span style="font-size:12px;font-weight:600;margin-left:4px;padding:2px 8px;border-radius:100px;display:inline-flex;align-items:center;background:#2563EB;color:#fff">{{ exp.company }}</span>
                   </div>
-                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="color:#2563EB;background:#E4E4E7">{{ exp.startDate }} - {{ exp.endDate }}</span>
+                  <span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:100px;color:#2563EB;background:#E4E4E7;white-space:nowrap">{{ formatDate(exp.startDate) }} - {{ formatDate(exp.endDate) }}</span>
                 </div>
-                <ul v-if="exp.descriptions?.length" class="mt-1 space-y-0.5">
-                  <li v-for="d in exp.descriptions" :key="d.text || d" class="text-[10px] font-medium" style="color:#3F3F46;padding-left:1rem;position:relative">
+                <ul v-if="exp.descriptions?.length" style="margin-top:4px;list-style:none;padding:0">
+                  <li v-for="d in exp.descriptions" :key="d.text || d" style="font-size:13px;font-weight:500;color:#3F3F46;padding-left:14px;position:relative;margin-bottom:2px">
                     <span style="position:absolute;left:0;color:#2563EB;font-weight:600">&rarr;</span>
                     <span>{{ d.text || d }}</span>
-                    <span v-if="d.skillIds?.length" class="text-[9px]" style="color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
+                    <span v-if="d.skillIds?.length" style="font-size:11px;color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
                   </li>
                 </ul>
               </div>
             </div>
-            <div v-if="linkedPreview.projects.length" class="mb-4">
-              <p class="text-xs font-bold uppercase tracking-wider mb-3" style="color:#18181B;display:flex;align-items:center;gap:0.5rem">
+            <div v-if="linkedPreview.projects.length">
+              <p style="font-size:18px;font-weight:700;font-family:'Archivo',sans-serif;color:#18181B;display:flex;align-items:center;gap:0.5rem;margin-bottom:14px">
                 Projets
                 <span style="flex:1;height:2px;background:linear-gradient(90deg,#2563EB 0%,transparent 100%)" />
               </p>
-              <div v-for="proj in linkedPreview.projects" :key="proj.id" class="mb-2" style="padding-left:1.2rem;border-left:2px solid #E4E4E7;position:relative">
-                <span style="position:absolute;left:-5px;top:5px;width:7px;height:7px;border-radius:50%;background:#2563EB" />
-                <p class="font-bold text-xs" style="color:#18181B">{{ proj.title }}</p>
-                <p class="text-[10px]" style="color:#71717A">{{ proj.startDate }} - {{ proj.endDate }}</p>
-                <ul v-if="proj.descriptions?.length" class="mt-1 space-y-0.5">
-                  <li v-for="d in proj.descriptions" :key="d.text || d" class="text-[10px] font-medium" style="color:#3F3F46;padding-left:1rem;position:relative">
+              <div v-for="proj in linkedPreview.projects" :key="proj.id" style="padding-left:20px;border-left:2px solid #E4E4E7;position:relative;margin-bottom:20px">
+                <span style="position:absolute;left:-5px;top:6px;width:8px;height:8px;border-radius:50%;background:#2563EB" />
+                <div class="flex items-start justify-between flex-wrap gap-1">
+                  <div>
+                    <span style="font-size:16px;font-weight:700;color:#18181B">{{ proj.title }}</span>
+                    <div v-if="proj.subtitle" style="margin-top:2px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;background:#2563EB;color:#fff">{{ proj.subtitle }}</div>
+                  </div>
+                  <span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:100px;color:#2563EB;background:#E4E4E7;white-space:nowrap">{{ formatDate(proj.startDate) }} - {{ formatDate(proj.endDate) }}</span>
+                </div>
+                <ul v-if="previewProjBullets(proj).length" style="margin-top:4px;list-style:none;padding:0">
+                  <li v-for="d in previewProjBullets(proj)" :key="d.text || d" style="font-size:13px;font-weight:500;color:#3F3F46;padding-left:14px;position:relative;margin-bottom:2px">
                     <span style="position:absolute;left:0;color:#2563EB;font-weight:600">&rarr;</span>
                     <span>{{ d.text || d }}</span>
-                    <span v-if="d.skillIds?.length" class="text-[9px]" style="color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
+                    <span v-if="d.skillIds?.length" style="font-size:11px;color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
                   </li>
                 </ul>
                 <div v-if="proj.technologies?.length" class="flex flex-wrap gap-1 mt-1">
-                  <span v-for="t in proj.technologies" :key="t.name || t" class="text-[9px] px-1 py-0.5 rounded flex items-center gap-0.5" style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.15);color:#1D4ED8">
-                    <Icon v-if="t.icon" :icon="t.icon" class="w-2.5 h-2.5" />
+                  <span v-for="t in proj.technologies" :key="t.name || t" style="font-size:10px;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.15);color:#1D4ED8">
+                    <Icon v-if="t.icon" :icon="t.icon" style="width:14px;height:14px" />
                     {{ t.name || t }}
                   </span>
                 </div>
               </div>
             </div>
             <div v-if="linkedPreview.education.length">
-              <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#18181B;display:flex;align-items:center;gap:0.5rem">
+              <p style="font-size:18px;font-weight:700;font-family:'Archivo',sans-serif;color:#18181B;display:flex;align-items:center;gap:0.5rem;margin-bottom:14px">
                 Formation
                 <span style="flex:1;height:2px;background:linear-gradient(90deg,#2563EB 0%,transparent 100%)" />
               </p>
-              <div v-for="edu in linkedPreview.education" :key="edu.id" class="flex items-start justify-between py-2" style="border-bottom:1px solid #E4E4E7">
+              <div v-for="edu in linkedPreview.education" :key="edu.id" style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid #E4E4E7">
                 <div>
-                  <p class="font-bold text-xs" style="color:#18181B">{{ edu.title }}</p>
-                  <p v-if="edu.school" class="text-[10px]" style="color:#71717A">{{ edu.school }}</p>
+                  <p style="font-size:16px;font-weight:800;color:#18181B;margin:0">{{ edu.title }}</p>
+                  <p v-if="edu.school" style="font-size:14px;color:#71717A;margin:0">{{ edu.school }}</p>
                 </div>
-                <span class="text-[10px]" style="color:#71717A">{{ edu.startDate || edu.date }} - {{ edu.endDate }}</span>
+                <span style="font-size:12px;color:#71717A;white-space:nowrap">{{ formatDate(edu.startDate || edu.date) }} - {{ formatDate(edu.endDate) }}</span>
               </div>
             </div>
           </div>
