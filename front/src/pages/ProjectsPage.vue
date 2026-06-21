@@ -16,7 +16,7 @@ const activeFilter = ref<'all' | Project['category']>('all')
 const filteredProjects = computed(() => {
   if (!projects.value) return []
   if (activeFilter.value === 'all') return projects.value
-  return projects.value.filter(p => p.category === activeFilter.value)
+  return projects.value.filter((p: Project) => p.category === activeFilter.value)
 })
 
 const totalProjects = computed(() => projects.value?.length ?? 0)
@@ -53,7 +53,7 @@ function statusDot(status: Project['status']) {
 function filterCount(key: string) {
   if (!projects.value) return 0
   if (key === 'all') return projects.value.length
-  return projects.value.filter(p => p.category === key).length
+  return projects.value.filter((p: Project) => p.category === key).length
 }
 </script>
 
