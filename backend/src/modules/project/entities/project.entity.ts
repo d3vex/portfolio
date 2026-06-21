@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Category } from '../../category/entities/category.entity';
+import { Skill } from '../../skill/entities/skill.entity';
+import { Education } from '../../education/entities/education.entity';
+import { Image } from '../../images/entities/image.entity';
+import { Link } from './link.entity';
+import { ProjectTimelineEntry } from './project-timeline-entry.entity';
+import { ProjectPoint } from './project-point.entity';
 
 export enum ProjectStatus {
   COMPLETED = 'completed',
@@ -33,22 +40,21 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   longDescription: string;
 
-  @Column({ type: 'simple-json', nullable: true })
-  descriptions: { text: string; skillIds?: string[] }[];
-
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'json', nullable: true })
   technologies: { name: string; icon?: string }[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  categoryIds: string[];
+  @ManyToMany(() => Category)
+  @JoinTable({ name: 'project_categories' })
+  categories: Category[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  skillIds: string[];
+  @ManyToMany(() => Skill)
+  @JoinTable({ name: 'project_skills' })
+  skills: Skill[];
 
-  @Column({ type: 'simple-enum', enum: ProjectStatus, default: ProjectStatus.IN_PROGRESS })
+  @Column({ type: 'enum', enum: ProjectStatus, default: ProjectStatus.IN_PROGRESS })
   status: ProjectStatus;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   featured: boolean;
 
   @Column({ nullable: true })
@@ -57,22 +63,33 @@ export class Project {
   @Column({ nullable: true })
   imageId: string;
 
+  @ManyToOne(() => Image)
+  @JoinColumn({ name: 'imageId' })
+  image: Image;
+
   @Column({ nullable: true })
   liveUrl: string;
 
   @Column({ nullable: true })
   sourceUrl: string;
 
-  @Column({ type: 'simple-json', nullable: true })
-  links: { label: string; url: string; icon?: string; type?: string }[];
+  @OneToMany(() => Link, link => link.project, { cascade: true, orphanedRowAction: 'delete' })
+  links: Link[];
 
-  @Column({ type: 'simple-json', nullable: true })
-  timeline: { date: string; title: string; description: string; status: string; imageUrl?: string }[];
+  @OneToMany(() => ProjectTimelineEntry, entry => entry.project, { cascade: true, orphanedRowAction: 'delete' })
+  timelineEntries: ProjectTimelineEntry[];
+
+  @OneToMany(() => ProjectPoint, point => point.project, { cascade: true, orphanedRowAction: 'delete' })
+  projectPoints: ProjectPoint[];
 
   @Column({ nullable: true })
   educationId: string;
 
-  @Column({ default: 0 })
+  @ManyToOne(() => Education)
+  @JoinColumn({ name: 'educationId' })
+  education: Education;
+
+  @Column({ type: 'int', default: 0 })
   order: number;
 
   @CreateDateColumn()
