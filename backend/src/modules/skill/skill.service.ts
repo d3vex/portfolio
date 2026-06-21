@@ -9,10 +9,12 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 export class SkillService {
   constructor(@InjectRepository(Skill) private repo: Repository<Skill>) {}
 
-  findAll() { return this.repo.find({ order: { order: 'ASC' } }); }
+  findAll() {
+    return this.repo.find({ relations: { category: true }, order: { order: 'ASC' } });
+  }
 
   async findOne(id: string) {
-    const entity = await this.repo.findOne({ where: { id } });
+    const entity = await this.repo.findOne({ where: { id }, relations: { category: true } });
     if (!entity) throw new NotFoundException('Skill not found');
     return entity;
   }

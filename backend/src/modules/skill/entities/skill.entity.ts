@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Category } from '../../category/entities/category.entity';
 
 @Entity('skills')
 export class Skill {
@@ -14,18 +15,22 @@ export class Skill {
   @Column({ nullable: true })
   categoryId: string;
 
-  @Column({ default: 'hard' })
-  cvCategory: string;
+  @ManyToOne(() => Category)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
+
+  @Column({ type: 'enum', enum: ['hard', 'soft'] })
+  cvCategory: 'hard' | 'soft';
 
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'json', nullable: true })
   keywords: string[];
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   level: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   order: number;
 }
