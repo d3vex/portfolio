@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'cv-manager-secret-key-2024',
       signOptions: { expiresIn: '7d' },
+
     }),
   ],
   controllers: [AuthController],
