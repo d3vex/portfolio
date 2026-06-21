@@ -33,10 +33,6 @@ export class CreateEducationDto {
   tags?: string[];
 
   @IsOptional()
-  @IsArray()
-  projectIds?: string[];
-
-  @IsOptional()
   @IsNumber()
   order?: number;
 }
