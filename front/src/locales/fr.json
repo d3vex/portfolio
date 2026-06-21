@@ -16,8 +16,7 @@
     "stat_years": "Ans d'exp.",
     "stat_techs": "Technologies",
     "cta_primary": "Voir mon travail",
-    "cta_secondary": "Me contacter",
-    "terminal_hint": "Tape 'help' pour les commandes disponibles"
+    "cta_secondary": "Me contacter"
   },
   "about": {
     "title": "À propos",
@@ -71,27 +70,6 @@
     "placeholder_name": "Votre nom",
     "placeholder_email": "votre{'@'}email.com",
     "placeholder_message": "Parlez-moi de votre projet..."
-  },
-  "terminal": {
-    "prompt": "visiteur{'@'}d3vex-portfolio:~$",
-    "welcome": "Bienvenue dans le terminal du portfolio de D3vex ! Tape 'help' pour voir les commandes disponibles.",
-    "help_title": "Commandes disponibles :",
-    "help_about": "  about      Apprendre à me connaître",
-    "help_skills": "  skills     Voir mes compétences techniques",
-    "help_projects": "  projects   Parcourir mes projets",
-    "help_contact": "  contact    Me contacter",
-    "help_clear": "  clear      Effacer le terminal",
-    "help_help": "  help       Afficher ce message",
-    "help_theme": "  theme      Changer le thème sombre/clair",
-    "help_lang": "  lang       Changer la langue (fr/en)",
-    "help_social": "  social     Voir mes liens sociaux",
-    "help_banner": "  banner     Afficher la bannière de bienvenue",
-    "about_text": "Je suis Loan MATA (D3vex), un étudiant français passionné par le développement logiciel et l'ingénierie infrastructure. Je construis des choses du frontend au bare metal.",
-    "skills_text": "Compétences : Développement (Vue, React, Node, Python, Go), Infrastructure (Docker, Kubernetes, Linux, CI/CD, Réseau), Bases de données (PostgreSQL, Redis, MongoDB)",
-    "contact_text": "Vous pouvez me joindre à : loan.mata{'@'}email.com\nGitHub : github.com/D3vex\nLinkedIn : linkedin.com/in/loanmata",
-    "theme_text": "Thème changé !",
-    "lang_text": "Langue changée en {lang}",
-    "not_found": "Commande introuvable : {cmd}. Tape 'help' pour voir les commandes disponibles."
   },
   "footer": {
     "copyright": "© {year} Loan MATA — Construit avec Vue & Tailwind",

@@ -16,8 +16,7 @@
     "stat_years": "Years exp.",
     "stat_techs": "Technologies",
     "cta_primary": "Explore my work",
-    "cta_secondary": "Contact me",
-    "terminal_hint": "Type 'help' for available commands"
+    "cta_secondary": "Contact me"
   },
   "about": {
     "title": "About Me",
@@ -74,27 +73,6 @@
     "placeholder_name": "Your name",
     "placeholder_email": "your{'@'}email.com",
     "placeholder_message": "Tell me about your project..."
-  },
-  "terminal": {
-    "prompt": "visitor{'@'}d3vex-portfolio:~$",
-    "welcome": "Welcome to D3vex's portfolio terminal! Type 'help' to see available commands.",
-    "help_title": "Available commands:",
-    "help_about": "  about      Learn about me",
-    "help_skills": "  skills     View my technical skills",
-    "help_projects": "  projects   Browse my projects",
-    "help_contact": "  contact    Get in touch",
-    "help_clear": "  clear      Clear terminal",
-    "help_help": "  help       Show this message",
-    "help_theme": "  theme      Toggle dark/light mode",
-    "help_lang": "  lang       Switch language (fr/en)",
-    "help_social": "  social     Show my social links",
-    "help_banner": "  banner     Display the welcome banner",
-    "about_text": "I'm Loan MATA (D3vex), a French IT student passionate about software development and infrastructure engineering. I build things from frontend to bare metal.",
-    "skills_text": "Skills: Development (Vue, React, Node, Python, Go), Infrastructure (Docker, Kubernetes, Linux, CI/CD, Network), Databases (PostgreSQL, Redis, MongoDB)",
-    "contact_text": "You can reach me at: loan.mata{'@'}email.com\nGitHub: github.com/D3vex\nLinkedIn: linkedin.com/in/loanmata",
-    "theme_text": "Theme toggled!",
-    "lang_text": "Language switched to {lang}",
-    "not_found": "Command not found: {cmd}. Type 'help' for available commands."
   },
   "footer": {
     "copyright": "© {year} Loan MATA — Built with Vue & Tailwind",
