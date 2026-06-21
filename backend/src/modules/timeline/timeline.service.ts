@@ -15,8 +15,8 @@ export class TimelineService {
 
   async getTimeline(): Promise<any[]> {
     const [experiences, education] = await Promise.all([
-      this.experienceRepo.find(),
-      this.educationRepo.find(),
+      this.experienceRepo.find({ relations: { skills: true, links: true } }),
+      this.educationRepo.find({ relations: { projects: true } }),
     ]);
 
     const timelineEvents = [
@@ -27,8 +27,8 @@ export class TimelineService {
         endDate: exp.endDate || undefined,
         title: exp.title,
         subtitle: exp.company,
-        description: exp.descriptions?.[0] || '',
-        tags: exp.skillIds || [],
+        description: exp.description || '',
+        tags: exp.tags || exp.skills?.map(s => s.id) || [],
         icon: 'mdi:briefcase',
       })),
       ...education.map(edu => ({
@@ -41,6 +41,13 @@ export class TimelineService {
         description: edu.description || '',
         tags: edu.tags || [],
         icon: 'mdi:school',
+        subProjects: (edu.projects || []).map(p => ({
+          title: p.title,
+          description: p.description || '',
+          tags: p.technologies?.map(t => t.name) || [],
+          imageUrl: p.imageUrl,
+          link: p.url,
+        })),
       })),
     ];
 
