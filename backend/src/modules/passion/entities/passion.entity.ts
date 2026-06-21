@@ -14,6 +14,6 @@ export class Passion {
   @Column({ nullable: true })
   icon: string;
 
-  @Column({ default: 0 })
+  @Column({ type: 'int', default: 0 })
   order: number;
 }

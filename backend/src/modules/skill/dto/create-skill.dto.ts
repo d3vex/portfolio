@@ -14,7 +14,7 @@ export class CreateSkillDto {
 
   @IsOptional()
   @IsString()
-  cvCategory?: string;
+  cvCategory?: 'hard' | 'soft';
 
   @IsOptional()
   @IsString()
