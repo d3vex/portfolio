@@ -17,8 +17,12 @@ import { CategoryModule } from './modules/category/category.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
-      database: 'data/cvmanager.sqlite',
+      type: 'mariadb',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '3306', 10),
+      username: process.env.DB_USER || 'root',
+      password: process.env.DB_PASS || '',
+      database: process.env.DB_NAME || 'cvmanager',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
