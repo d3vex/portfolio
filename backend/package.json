@@ -8,6 +8,8 @@
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "seed": "ts-node src/seed.ts",
+    "migrate-db": "ts-node scripts/migrate-db.ts",
+    "migrate-old": "ts-node scripts/migrate-old-schema.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -26,7 +28,9 @@
     "better-sqlite3": "^12.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "dotenv": "^17.4.2",
     "multer": "^2.1.1",
+    "mysql2": "^3.22.5",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
