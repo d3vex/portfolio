@@ -24,12 +24,24 @@ export class CreateExperienceDto {
   endDate?: string;
 
   @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
   @IsArray()
   descriptions?: { text: string; skillIds?: string[] }[];
 
   @IsOptional()
   @IsArray()
   skillIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  tags?: string[];
+
+  @IsOptional()
+  @IsArray()
+  experiencePoints?: { text: string; skillIds?: string[] }[];
 
   @IsOptional()
   @IsArray()
