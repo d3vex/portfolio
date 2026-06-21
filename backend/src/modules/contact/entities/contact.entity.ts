@@ -17,6 +17,9 @@ export class Contact {
   @Column({ default: 'info' })
   type: string;
 
-  @Column({ default: 0 })
+  @Column({ type: 'boolean', default: false })
+  isPrivate: boolean;
+
+  @Column({ type: 'int', default: 0 })
   order: number;
 }
