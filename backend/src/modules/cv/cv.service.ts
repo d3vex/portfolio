@@ -28,11 +28,11 @@ export class CvService {
   ) {}
 
   findAll() {
-    return this.repo.find({ relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true, picture: true }, order: { createdAt: 'DESC' } });
+    return this.repo.find({ relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true }, order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string) {
-    const cv = await this.repo.findOne({ where: { id }, relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true, picture: true } });
+    const cv = await this.repo.findOne({ where: { id }, relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true } });
     if (!cv) throw new NotFoundException('CV not found');
     return cv;
   }
