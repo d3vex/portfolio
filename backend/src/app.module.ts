@@ -25,6 +25,9 @@ import { CategoryModule } from './modules/category/category.module';
       database: process.env.DB_NAME || 'cvmanager',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      extra: {
+        maxAllowedPacket: 256 * 1024 * 1024,
+      },
     }),
     AuthModule,
     ProfileModule,

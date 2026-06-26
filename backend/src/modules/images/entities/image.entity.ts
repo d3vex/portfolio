@@ -5,7 +5,7 @@ export class Image {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'blob' })
+  @Column({ type: 'longblob' })
   data: Buffer;
 
   @Column()

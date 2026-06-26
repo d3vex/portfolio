@@ -2,6 +2,7 @@ services:
   mariadb:
     image: mariadb:11
     container_name: cv-mariadb
+    command: --max_allowed_packet=256M
     environment:
       MARIADB_ROOT_PASSWORD: root
       MARIADB_DATABASE: cvmanager
