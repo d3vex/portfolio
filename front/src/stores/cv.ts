@@ -93,10 +93,15 @@ export const useCvStore = defineStore('cv', () => {
     await loadCvs()
   }
 
+  async function cloneCv(id: string) {
+    await api.cloneCv(id)
+    await loadCvs()
+  }
+
   return {
     token, user, cvs, currentCv, stats, loading, error,
     isAuthenticated,
     login, register, logout, init,
-    loadCvs, loadCv, loadStats, saveCv, removeCv,
+    loadCvs, loadCv, loadStats, saveCv, removeCv, cloneCv,
   }
 })

@@ -25,6 +25,11 @@ export class CvController {
   @ApiOperation({ summary: 'Get CV by id' })
   findOne(@Param('id') id: string) { return this.service.findOne(id); }
 
+  @Public()
+  @Post(':id/clone')
+  @ApiOperation({ summary: 'Clone a CV' })
+  clone(@Param('id') id: string) { return this.service.clone(id); }
+
   @Post()
   @ApiOperation({ summary: 'Create new CV' })
   create(@Body() dto: CreateCvDto) { return this.service.create(dto); }

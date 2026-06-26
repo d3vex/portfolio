@@ -66,6 +66,10 @@ export function deleteCv(id: string) {
   return request<any>(`/cv/${id}`, { method: 'DELETE' })
 }
 
+export function cloneCv(id: string) {
+  return request<any>(`/cv/${id}/clone`, { method: 'POST' })
+}
+
 const entityPathMap: Record<string, string> = {
   skills: 'skills',
   experiences: 'experiences',

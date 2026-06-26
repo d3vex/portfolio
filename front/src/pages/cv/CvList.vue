@@ -63,6 +63,10 @@ function formatDate(d: string) {
               class="px-3 py-1.5 text-sm border border-gray-200 dark:border-surface-700 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer">
               Edit
             </button>
+            <button @click="store.cloneCv(cv.id)"
+              class="px-3 py-1.5 text-sm border border-green-200 dark:border-green-900 text-green-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-950 transition-colors cursor-pointer">
+              Clone
+            </button>
             <button @click="store.removeCv(cv.id)"
               class="px-3 py-1.5 text-sm border border-red-200 dark:border-red-900 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors cursor-pointer">
               Delete

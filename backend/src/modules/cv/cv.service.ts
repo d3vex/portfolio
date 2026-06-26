@@ -64,6 +64,28 @@ export class CvService {
     return this.repo.save(entity);
   }
 
+  async clone(id: string) {
+    const original = await this.findOne(id);
+    const entity = this.repo.create({
+      name: `${original.name} (Copie)`,
+      specialization: original.specialization,
+      titleOverride: original.titleOverride,
+      aboutText: original.aboutText,
+      availability: original.availability,
+      pictureId: original.pictureId,
+      projectBullets: original.projectBullets,
+      isDefault: false,
+    });
+    entity.skills = original.skills || [];
+    entity.languages = original.languages || [];
+    entity.passions = original.passions || [];
+    entity.experiences = original.experiences || [];
+    entity.projects = original.projects || [];
+    entity.education = original.education || [];
+    entity.contacts = original.contacts || [];
+    return this.repo.save(entity);
+  }
+
   async remove(id: string) {
     const cv = await this.findOne(id);
     return this.repo.remove(cv);
