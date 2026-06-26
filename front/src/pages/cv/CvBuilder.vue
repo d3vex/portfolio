@@ -14,6 +14,7 @@ const saving = ref(false)
 
 const form = ref({
   name: '',
+  candidateName: '',
   specialization: '',
   titleOverride: '',
   aboutText: '',
@@ -63,6 +64,7 @@ onMounted(async () => {
     const cv = await api.getCv(route.params.id as string)
     form.value = {
       name: cv.name,
+      candidateName: cv.candidateName || '',
       specialization: cv.specialization || '',
       titleOverride: cv.titleOverride || '',
       aboutText: cv.aboutText || '',
@@ -137,6 +139,12 @@ const linkedPreview = computed(() => ({
   availability: form.value.availability,
 }))
 
+const displayName = computed(() => form.value.candidateName || form.value.name)
+
+function nameInitials(): string {
+  return displayName.value ? displayName.value.split(/\s+/).map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : 'LM'
+}
+
 function formatAbout(text: string): string {
   if (!text) return ''
   let html = text.replace(/\n/g, '<br>')
@@ -183,6 +191,13 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
           <label class="block text-sm font-medium mb-1">CV Name *</label>
           <input v-model="form.name" placeholder="e.g. Web Developer CV"
             class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-accent/50 outline-none" />
+          <p class="text-xs text-surface-400 mt-1">Used to identify this CV in the list</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Candidate Name</label>
+          <input v-model="form.candidateName" placeholder="e.g. John Doe"
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-accent/50 outline-none" />
+          <p class="text-xs text-surface-400 mt-1">Leave empty to use the CV name as the displayed name</p>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Specialization</label>
@@ -372,8 +387,9 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
             <div class="text-center">
               <div style="width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.06);border:3px solid #2563EB;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;overflow:hidden">
                 <img v-if="linkedPreview.pictureId" :src="`http://localhost:3001/api/images/${linkedPreview.pictureId}`" class="w-full h-full object-cover" />
-                <span v-else style="font-family:'Archivo',sans-serif;font-size:30px;font-weight:800;color:#3B82F6">LM</span>
+                <span v-else style="font-family:'Archivo',sans-serif;font-size:30px;font-weight:800;color:#3B82F6">{{ nameInitials() }}</span>
               </div>
+              <h2 style="font-family:'Archivo',sans-serif;font-size:28px;font-weight:800;color:#fff;margin:8px 0 4px;text-align:center;letter-spacing:-0.02em;line-height:1.1">{{ displayName }}</h2>
               <span style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;background:#2563EB;color:#fff;padding:4px 12px;border-radius:100px;margin-bottom:8px;text-align:center">{{ form.titleOverride || form.specialization || 'Professional' }}</span>
               <div v-if="linkedPreview.availability" style="margin-top:8px;font-size:13px;font-weight:500;padding:6px 14px;border-radius:8px;width:100%;background:rgba(37,99,235,0.15);color:#3B82F6;border:1px solid rgba(37,99,235,0.2);text-align:center">{{ linkedPreview.availability }}</div>
             </div>

@@ -6,6 +6,10 @@ export class CreateCvDto {
 
   @IsOptional()
   @IsString()
+  candidateName?: string;
+
+  @IsOptional()
+  @IsString()
   specialization?: string;
 
   @IsOptional()

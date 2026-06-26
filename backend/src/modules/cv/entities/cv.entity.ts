@@ -17,6 +17,9 @@ export class Cv {
   name: string;
 
   @Column({ nullable: true })
+  candidateName: string;
+
+  @Column({ nullable: true })
   specialization: string;
 
   @Column({ nullable: true })

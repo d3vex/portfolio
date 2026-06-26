@@ -68,6 +68,7 @@ export class CvService {
     const original = await this.findOne(id);
     const entity = this.repo.create({
       name: `${original.name} (Copie)`,
+      candidateName: original.candidateName,
       specialization: original.specialization,
       titleOverride: original.titleOverride,
       aboutText: original.aboutText,

@@ -111,7 +111,8 @@ function buildPrintHtml(): string {
     return d.text || d || ''
   }
 
-  const initials = c.name ? c.name.split(/\s+/).map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : 'LM'
+  const personName = c.candidateName || c.name
+  const initials = personName ? personName.split(/\s+/).map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : 'LM'
   const picPrintUrl = c.pictureId ? `http://localhost:3001/api/images/${c.pictureId}` : null
   const photoHtml = picPrintUrl
     ? `<img src="${es(picPrintUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;transform:scale(${pictureZoom.value})">`
@@ -186,7 +187,8 @@ function buildPrintHtml(): string {
     `<div class="education-item"><div><div class="edu-title">${es(edu.title)}</div><div class="edu-school">${es(edu.school)} ${edu.school && edu.startDate ? '· ' : ''}${es(formatDate(edu.startDate || edu.date))} - ${es(formatDate(edu.endDate))}</div></div><span class="edu-date">${es(formatDate(edu.startDate || edu.date))} - ${es(formatDate(edu.endDate))}</span></div>`
   ).join('\n      ')
 
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${es(c.name || 'CV')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${cvStyleCss}</style></head><body><div class="cv-container"><aside class="sidebar"><div><div class="photo-placeholder">${photoHtml}</div><h1>${es(c.name)}</h1><span class="title-badge">${es(c.titleOverride || c.specialization || 'Professional')}</span>${c.availability ? `<span class="availability-badge">${es(c.availability)}</span>` : ''}</div>${linkedData.value.contacts.length ? `<div><h2>Contact</h2>${contactHtml}</div>` : ''}${hardSkillsHtml ? `<div><h2>Hard Skills</h2><div class="skills-grid">${hardSkillsHtml}</div></div>` : ''}${softSkillsHtml ? `<div><h2>Soft Skills</h2>${softSkillsHtml}</div>` : ''}${langHtml ? `<div><h2>Langues</h2>${langHtml}</div>` : ''}${passionHtml ? `<div><h2>Passions</h2>${passionHtml}</div>` : ''}</aside><main class="main">${aboutSection}${expHtml ? `<section><h2>Expériences Professionnelles</h2>${expHtml}</section>` : ''}${projHtml ? `<section><h2>Projets</h2>${projHtml}</section>` : ''}${eduHtml ? `<section><h2>Formation</h2>${eduHtml}</section>` : ''}</main></div></body></html>`
+  const personNamePrint = c.candidateName || c.name
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${es(personNamePrint || 'CV')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${cvStyleCss}</style></head><body><div class="cv-container"><aside class="sidebar"><div><div class="photo-placeholder">${photoHtml}</div><h1>${es(personNamePrint)}</h1><span class="title-badge">${es(c.titleOverride || c.specialization || 'Professional')}</span>${c.availability ? `<span class="availability-badge">${es(c.availability)}</span>` : ''}</div>${linkedData.value.contacts.length ? `<div><h2>Contact</h2>${contactHtml}</div>` : ''}${hardSkillsHtml ? `<div><h2>Hard Skills</h2><div class="skills-grid">${hardSkillsHtml}</div></div>` : ''}${softSkillsHtml ? `<div><h2>Soft Skills</h2>${softSkillsHtml}</div>` : ''}${langHtml ? `<div><h2>Langues</h2>${langHtml}</div>` : ''}${passionHtml ? `<div><h2>Passions</h2>${passionHtml}</div>` : ''}</aside><main class="main">${aboutSection}${expHtml ? `<section><h2>Expériences Professionnelles</h2>${expHtml}</section>` : ''}${projHtml ? `<section><h2>Projets</h2>${projHtml}</section>` : ''}${eduHtml ? `<section><h2>Formation</h2>${eduHtml}</section>` : ''}</main></div></body></html>`
 }
 
 function printCv() {
@@ -231,7 +233,8 @@ function formatAbout(text: string): string {
 }
 
 function nameInitials(): string {
-  return cv.value?.name ? cv.value.name.split(/\s+/).map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : 'LM'
+  const n = cv.value?.candidateName || cv.value?.name
+  return n ? n.split(/\s+/).map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : 'LM'
 }
 
 const picUrl = computed(() => {
@@ -288,7 +291,7 @@ function hostname(url: string): string {
             <span class="text-[10px] font-mono text-surface-400">{{ (pictureZoom * 100).toFixed(0) }}%</span>
             <button @click="zoomIn" class="zoom-btn" :disabled="pictureZoom >= 2">&plus;</button>
           </div>
-          <h1>{{ cv.name }}</h1>
+          <h1>{{ cv.candidateName || cv.name }}</h1>
           <span class="title-badge">{{ cv.titleOverride || cv.specialization || 'Professional' }}</span>
           <div v-if="cv.availability" class="availability-badge">{{ cv.availability }}</div>
         </div>
