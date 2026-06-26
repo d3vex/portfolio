@@ -427,8 +427,8 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
                   </div>
                   <span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:100px;color:#2563EB;background:#E4E4E7;white-space:nowrap">{{ formatDate(exp.startDate) }} - {{ formatDate(exp.endDate) }}</span>
                 </div>
-                <ul v-if="exp.descriptions?.length" style="margin-top:4px;list-style:none;padding:0">
-                  <li v-for="d in exp.descriptions" :key="d.text || d" style="font-size:13px;font-weight:500;color:#3F3F46;padding-left:14px;position:relative;margin-bottom:2px">
+                <ul v-if="exp.experiencePoints?.length" style="margin-top:4px;list-style:none;padding:0">
+                  <li v-for="d in exp.experiencePoints" :key="d.text || d" style="font-size:13px;font-weight:500;color:#3F3F46;padding-left:14px;position:relative;margin-bottom:2px">
                     <span style="position:absolute;left:0;color:#2563EB;font-weight:600">&rarr;</span>
                     <span>{{ d.text || d }}</span>
                     <span v-if="d.skillIds?.length" style="font-size:11px;color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
