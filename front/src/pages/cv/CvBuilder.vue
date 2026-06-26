@@ -25,6 +25,7 @@ const form = ref({
   experienceIds: [] as string[],
   projectIds: [] as string[],
   educationIds: [] as string[],
+  contactIds: [] as string[],
   projectBullets: {} as Record<string, number[]>,
 })
 
@@ -73,6 +74,7 @@ onMounted(async () => {
       experienceIds: cv.experiences?.map((e: any) => e.id) || [],
       projectIds: cv.projects?.map((p: any) => p.id) || [],
       educationIds: cv.education?.map((e: any) => e.id) || [],
+      contactIds: cv.contacts?.map((c: any) => c.id) || [],
       projectBullets: cv.projectBullets || {},
     }
   }
@@ -130,7 +132,7 @@ const linkedPreview = computed(() => ({
   experiences: experiences.value.filter(e => form.value.experienceIds?.includes(e.id)),
   projects: projects.value.filter(p => form.value.projectIds?.includes(p.id)),
   education: education.value.filter(e => form.value.educationIds?.includes(e.id)),
-  contacts: contacts.value,
+  contacts: contacts.value.filter(c => form.value.contactIds?.includes(c.id)),
   pictureId: form.value.pictureId,
   availability: form.value.availability,
 }))
@@ -151,7 +153,7 @@ function formatDate(d: string | null | undefined): string {
   }
 }
 
-const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects', 'Education', 'Preview']
+const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects', 'Education', 'Contacts', 'Preview']
 </script>
 
 <template>
@@ -346,8 +348,24 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
         </div>
       </div>
 
-      <!-- Step 6: Preview -->
+      <!-- Step 6: Contacts -->
       <div v-if="step === 6">
+        <p class="text-sm text-surface-500 mb-4">Select contact methods to display</p>
+        <div class="space-y-2">
+          <button v-for="item in contacts" :key="item.id"
+            @click="toggle(form.contactIds, item.id)"
+            class="w-full text-left px-4 py-3 rounded-xl border text-sm transition-all cursor-pointer"
+            :class="form.contactIds.includes(item.id)
+              ? 'bg-accent/10 border-accent text-accent'
+              : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
+            <span class="font-medium">{{ item.label }}</span>
+            <span class="text-surface-500 ml-2">{{ item.value }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 7: Preview -->
+      <div v-if="step === 7">
         <p class="text-sm text-surface-500 mb-4">Review your CV before saving</p>
         <div class="rounded-xl overflow-hidden" style="display:grid;grid-template-columns:320px 1fr;max-width:1240px;margin:0 auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);min-height:1100px">
           <div style="background:#18181B;color:#E4E4E7;padding:40px 28px;display:flex;flex-direction:column;gap:20px">
@@ -491,7 +509,7 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
       </button>
       <div v-else></div>
 
-      <button v-if="step < 6" @click="step = step + 1"
+      <button v-if="step < 7" @click="step = step + 1"
         class="px-6 py-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover transition-colors cursor-pointer">
         Next
       </button>

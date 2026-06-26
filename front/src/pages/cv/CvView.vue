@@ -17,7 +17,7 @@ const contacts = ref<any[]>([])
 const loading = ref(true)
 
 const linkedData = computed(() => {
-  if (!cv.value) return { skills: [], languages: [], passions: [], experiences: [], projects: [], education: [] }
+  if (!cv.value) return { skills: [], languages: [], passions: [], experiences: [], projects: [], education: [], contacts: [] }
   const cvIds = (key: string) => (cv.value?.[key] || []).map((e: any) => e.id)
   const selectedProjects = projects.value.filter(p => cvIds('projects').includes(p.id))
   const selectedEducation = education.value.filter(e => cvIds('education').includes(e.id))
@@ -31,6 +31,7 @@ const linkedData = computed(() => {
       ...e,
       linkedProjects: selectedProjects.filter(p => p.educationId === e.id),
     })),
+    contacts: contacts.value.filter(c => cvIds('contacts').includes(c.id)),
   }
 })
 
@@ -115,7 +116,7 @@ function buildPrintHtml(): string {
   const photoHtml = picPrintUrl
     ? `<img src="${es(picPrintUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;transform:scale(${pictureZoom.value})">`
     : `<span class="photo-initials">${initials}</span>`
-  const contactHtml = contacts.value.map(c => {
+  const contactHtml = linkedData.value.contacts.map(c => {
     const v = c.value || ''
     const display = v.replace(/^https?:\/\//, '').replace(/\/$/, '')
     let link = ''
@@ -185,7 +186,7 @@ function buildPrintHtml(): string {
     `<div class="education-item"><div><div class="edu-title">${es(edu.title)}</div><div class="edu-school">${es(edu.school)} ${edu.school && edu.startDate ? '· ' : ''}${es(formatDate(edu.startDate || edu.date))} - ${es(formatDate(edu.endDate))}</div></div><span class="edu-date">${es(formatDate(edu.startDate || edu.date))} - ${es(formatDate(edu.endDate))}</span></div>`
   ).join('\n      ')
 
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${es(c.name || 'CV')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${cvStyleCss}</style></head><body><div class="cv-container"><aside class="sidebar"><div><div class="photo-placeholder">${photoHtml}</div><h1>${es(c.name)}</h1><span class="title-badge">${es(c.titleOverride || c.specialization || 'Professional')}</span>${c.availability ? `<span class="availability-badge">${es(c.availability)}</span>` : ''}</div>${contacts.value.length ? `<div><h2>Contact</h2>${contactHtml}</div>` : ''}${hardSkillsHtml ? `<div><h2>Hard Skills</h2><div class="skills-grid">${hardSkillsHtml}</div></div>` : ''}${softSkillsHtml ? `<div><h2>Soft Skills</h2>${softSkillsHtml}</div>` : ''}${langHtml ? `<div><h2>Langues</h2>${langHtml}</div>` : ''}${passionHtml ? `<div><h2>Passions</h2>${passionHtml}</div>` : ''}</aside><main class="main">${aboutSection}${expHtml ? `<section><h2>Expériences Professionnelles</h2>${expHtml}</section>` : ''}${projHtml ? `<section><h2>Projets</h2>${projHtml}</section>` : ''}${eduHtml ? `<section><h2>Formation</h2>${eduHtml}</section>` : ''}</main></div></body></html>`
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${es(c.name || 'CV')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${cvStyleCss}</style></head><body><div class="cv-container"><aside class="sidebar"><div><div class="photo-placeholder">${photoHtml}</div><h1>${es(c.name)}</h1><span class="title-badge">${es(c.titleOverride || c.specialization || 'Professional')}</span>${c.availability ? `<span class="availability-badge">${es(c.availability)}</span>` : ''}</div>${linkedData.value.contacts.length ? `<div><h2>Contact</h2>${contactHtml}</div>` : ''}${hardSkillsHtml ? `<div><h2>Hard Skills</h2><div class="skills-grid">${hardSkillsHtml}</div></div>` : ''}${softSkillsHtml ? `<div><h2>Soft Skills</h2>${softSkillsHtml}</div>` : ''}${langHtml ? `<div><h2>Langues</h2>${langHtml}</div>` : ''}${passionHtml ? `<div><h2>Passions</h2>${passionHtml}</div>` : ''}</aside><main class="main">${aboutSection}${expHtml ? `<section><h2>Expériences Professionnelles</h2>${expHtml}</section>` : ''}${projHtml ? `<section><h2>Projets</h2>${projHtml}</section>` : ''}${eduHtml ? `<section><h2>Formation</h2>${eduHtml}</section>` : ''}</main></div></body></html>`
 }
 
 function printCv() {
@@ -293,9 +294,9 @@ function hostname(url: string): string {
         </div>
 
         <!-- Contact -->
-        <div v-if="contacts.length">
+        <div v-if="linkedData.contacts.length">
           <h2>Contact</h2>
-          <div v-for="c in contacts" :key="c.id" class="contact-item">
+          <div v-for="c in linkedData.contacts" :key="c.id" class="contact-item">
             <Icon v-if="c.icon" :icon="c.icon" class="w-4 h-4 flex-shrink-0" />
             <a v-if="c.type === 'link'" :href="c.value.startsWith('http') ? c.value : 'https://' + c.value" target="_blank">
               {{ c.value.replace(/^https?:\/\//, '').replace(/\/$/, '') }}

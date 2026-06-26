@@ -41,6 +41,10 @@ export class CreateCvDto {
   educationIds?: string[];
 
   @IsOptional()
+  @IsArray()
+  contactIds?: string[];
+
+  @IsOptional()
   projectBullets?: Record<string, number[]>;
 
   @IsOptional()

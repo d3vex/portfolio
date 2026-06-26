@@ -8,6 +8,7 @@ import { Experience } from '../experience/entities/experience.entity';
 import { Education } from '../education/entities/education.entity';
 import { Language } from '../language/entities/language.entity';
 import { Passion } from '../passion/entities/passion.entity';
+import { Contact } from '../contact/entities/contact.entity';
 import { Category } from '../category/entities/category.entity';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
@@ -22,21 +23,22 @@ export class CvService {
     @InjectRepository(Education) private educationRepo: Repository<Education>,
     @InjectRepository(Language) private languageRepo: Repository<Language>,
     @InjectRepository(Passion) private passionRepo: Repository<Passion>,
+    @InjectRepository(Contact) private contactRepo: Repository<Contact>,
     @InjectRepository(Category) private categoryRepo: Repository<Category>,
   ) {}
 
   findAll() {
-    return this.repo.find({ relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, picture: true }, order: { createdAt: 'DESC' } });
+    return this.repo.find({ relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true, picture: true }, order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string) {
-    const cv = await this.repo.findOne({ where: { id }, relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, picture: true } });
+    const cv = await this.repo.findOne({ where: { id }, relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true, picture: true } });
     if (!cv) throw new NotFoundException('CV not found');
     return cv;
   }
 
   async create(dto: CreateCvDto) {
-    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, ...rest } = dto;
+    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, contactIds, ...rest } = dto;
     const entity = this.repo.create(rest);
     entity.skills = skillIds?.length ? await this.skillRepo.findBy({ id: In(skillIds) }) : [];
     entity.languages = languageIds?.length ? await this.languageRepo.findBy({ id: In(languageIds) }) : [];
@@ -44,12 +46,13 @@ export class CvService {
     entity.experiences = experienceIds?.length ? await this.experienceRepo.findBy({ id: In(experienceIds) }) : [];
     entity.projects = projectIds?.length ? await this.projectRepo.findBy({ id: In(projectIds) }) : [];
     entity.education = educationIds?.length ? await this.educationRepo.findBy({ id: In(educationIds) }) : [];
+    entity.contacts = contactIds?.length ? await this.contactRepo.findBy({ id: In(contactIds) }) : [];
     return this.repo.save(entity);
   }
 
   async update(id: string, dto: UpdateCvDto) {
     const entity = await this.findOne(id);
-    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, ...rest } = dto as any;
+    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, contactIds, ...rest } = dto as any;
     Object.assign(entity, rest);
     if (skillIds !== undefined) entity.skills = skillIds?.length ? await this.skillRepo.findBy({ id: In(skillIds) }) : [];
     if (languageIds !== undefined) entity.languages = languageIds?.length ? await this.languageRepo.findBy({ id: In(languageIds) }) : [];
@@ -57,6 +60,7 @@ export class CvService {
     if (experienceIds !== undefined) entity.experiences = experienceIds?.length ? await this.experienceRepo.findBy({ id: In(experienceIds) }) : [];
     if (projectIds !== undefined) entity.projects = projectIds?.length ? await this.projectRepo.findBy({ id: In(projectIds) }) : [];
     if (educationIds !== undefined) entity.education = educationIds?.length ? await this.educationRepo.findBy({ id: In(educationIds) }) : [];
+    if (contactIds !== undefined) entity.contacts = contactIds?.length ? await this.contactRepo.findBy({ id: In(contactIds) }) : [];
     return this.repo.save(entity);
   }
 

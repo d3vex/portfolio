@@ -6,6 +6,7 @@ import { Experience } from '../../experience/entities/experience.entity';
 import { Project } from '../../project/entities/project.entity';
 import { Education } from '../../education/entities/education.entity';
 import { Image } from '../../images/entities/image.entity';
+import { Contact } from '../../contact/entities/contact.entity';
 
 @Entity('cvs')
 export class Cv {
@@ -47,6 +48,10 @@ export class Cv {
   @ManyToMany(() => Education)
   @JoinTable({ name: 'cv_education' })
   education: Education[];
+
+  @ManyToMany(() => Contact)
+  @JoinTable({ name: 'cv_contacts' })
+  contacts: Contact[];
 
   @Column({ type: 'json', nullable: true })
   projectBullets: Record<string, number[]>;
