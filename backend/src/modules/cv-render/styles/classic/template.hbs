@@ -1,0 +1,135 @@
+<div class="cv-container">
+  <aside class="sidebar">
+    <div>
+      <div class="photo-placeholder">
+        {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="">{{else}}<span class="photo-initials">{{cv.initials}}</span>{{/if}}
+      </div>
+      <h1>{{cv.displayName}}</h1>
+      <span class="title-badge">{{cv.titleText}}</span>
+      {{#if cv.availability}}<span class="availability-badge">{{cv.availability}}</span>{{/if}}
+    </div>
+
+    {{#if contacts.length}}
+    <div>
+      <h2>Contact</h2>
+      {{#each contacts}}
+      <div class="contact-item">
+        {{#if this.iconHref}}<img src="{{this.iconHref}}" width="16" height="16" alt="">{{/if}}
+        {{#if this.linkHref}}<a href="{{this.linkHref}}" target="_blank">{{this.displayValue}}</a>{{else}}<span>{{this.displayValue}}</span>{{/if}}
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if skills.hard.length}}
+    <div>
+      <h2>Hard Skills</h2>
+      <div class="skills-grid">
+        {{#each skills.hard}}
+        <span class="skill-tag">{{#if this.iconHref}}<img src="{{this.iconHref}}" width="16" height="16" alt="">{{/if}}{{this.name}}</span>
+        {{/each}}
+      </div>
+    </div>
+    {{/if}}
+
+    {{#if skills.soft.length}}
+    <div>
+      <h2>Soft Skills</h2>
+      {{#each skills.soft}}
+      <div class="soft-skill-item"><span class="soft-skill-dot"></span><div><span class="soft-skill-name">{{this.name}}</span>{{#if this.description}}<span class="soft-skill-desc">{{this.description}}</span>{{/if}}</div></div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if languages.length}}
+    <div>
+      <h2>Langues</h2>
+      {{#each languages}}
+      <div class="lang-item"><span>{{this.name}}</span><span class="lang-level">{{this.level}}</span></div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if passions.length}}
+    <div>
+      <h2>Passions</h2>
+      {{#each passions}}
+      <div class="passion-item">{{#if this.iconHref}}<img src="{{this.iconHref}}" width="16" height="16" alt="">{{/if}}<div><span class="passion-name">{{this.name}}</span>{{#if this.description}}<span class="passion-desc">{{this.description}}</span>{{/if}}</div></div>
+      {{/each}}
+    </div>
+    {{/if}}
+  </aside>
+
+  <main class="main">
+    {{#if cv.aboutText}}
+    <section>
+      <h2>À Propos</h2>
+      <div class="about-text"><p>{{{cv.aboutHtml}}}</p></div>
+    </section>
+    {{/if}}
+
+    {{#if experiences.length}}
+    <section>
+      <h2>Expériences Professionnelles</h2>
+      {{#each experiences}}
+      <div class="experience-item">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">{{this.role}}</div>
+            <div class="exp-subtitle">{{this.company}}{{#if this.companyUrl}} <a href="{{this.companyUrl}}" target="_blank" class="exp-link">{{this.companyHost}}</a>{{/if}}</div>
+          </div>
+          <span class="exp-date">{{this.startLabel}} - {{this.endLabel}}</span>
+        </div>
+        {{#if this.location}}<p class="exp-place">{{this.location}}</p>{{/if}}
+        {{#if this.points.length}}
+        <ul class="exp-desc">
+          {{#each this.points}}
+          <li>{{this.text}}{{#if this.skillRef}} <span class="skill-ref">— {{this.skillRef}}</span>{{/if}}</li>
+          {{/each}}
+        </ul>
+        {{/if}}
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if projects.length}}
+    <section>
+      <h2>Projets</h2>
+      {{#each projects}}
+      <div class="project-item">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">{{this.name}}</div>
+            <div class="exp-subtitle">{{#if this.subtitle}}<span>{{this.subtitle}}</span>{{/if}}{{#if this.liveUrl}}<a href="{{this.liveUrl}}" target="_blank" class="exp-link">Live</a>{{/if}}{{#if this.sourceUrl}}<a href="{{this.sourceUrl}}" target="_blank" class="exp-link">Source</a>{{/if}}</div>
+          </div>
+          <span class="exp-date">{{this.startLabel}} - {{this.endLabel}}</span>
+        </div>
+        {{#if this.points.length}}
+        <ul class="exp-desc">
+          {{#each this.points}}
+          <li>{{this.text}}{{#if this.skillRef}} <span class="skill-ref">— {{this.skillRef}}</span>{{/if}}</li>
+          {{/each}}
+        </ul>
+        {{/if}}
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if education.length}}
+    <section>
+      <h2>Formation</h2>
+      {{#each education}}
+      <div class="education-item">
+        <div>
+          <div class="edu-title">{{this.title}}</div>
+          <div class="edu-school">{{this.school}}{{#if this.school}}{{#if this.startLabel}} · {{/if}}{{/if}}{{this.startLabel}} - {{this.endLabel}}</div>
+        </div>
+        <span class="edu-date">{{this.startLabel}} - {{this.endLabel}}</span>
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+  </main>
+</div>

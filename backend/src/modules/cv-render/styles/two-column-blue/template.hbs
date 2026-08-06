@@ -1,0 +1,128 @@
+<div class="tc-container">
+  <aside class="tc-sidebar">
+    <div class="tc-photo">
+      {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="">{{else}}<span class="tc-initials">{{cv.initials}}</span>{{/if}}
+    </div>
+    <h1>{{cv.displayName}}</h1>
+    {{#if cv.titleText}}<div class="tc-badge">{{cv.titleText}}</div>{{/if}}
+    {{#if cv.availability}}<div class="tc-availability">{{cv.availability}}</div>{{/if}}
+
+    {{#if contacts.length}}
+    <section>
+      <h2>Contact</h2>
+      {{#each contacts}}
+      <div class="tc-contact">
+        {{#if this.iconHref}}<img src="{{this.iconHref}}" width="16" height="16" alt="">{{/if}}
+        {{#if this.linkHref}}<a href="{{this.linkHref}}" target="_blank">{{this.displayValue}}</a>{{else}}<span>{{this.displayValue}}</span>{{/if}}
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if skills.hard.length}}
+    <section>
+      <h2>Skills</h2>
+      <div class="tc-skill-grid">
+        {{#each skills.hard}}<span class="tc-skill">{{this.name}}</span>{{/each}}
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if skills.soft.length}}
+    <section>
+      <h2>Soft Skills</h2>
+      {{#each skills.soft}}
+      <div class="tc-soft"><span class="tc-soft-name">{{this.name}}</span>{{#if this.description}}<span class="tc-soft-desc">{{this.description}}</span>{{/if}}</div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if languages.length}}
+    <section>
+      <h2>Languages</h2>
+      {{#each languages}}
+      <div class="tc-lang"><span>{{this.name}}</span><span class="tc-lang-level">{{this.level}}</span></div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if passions.length}}
+    <section>
+      <h2>Passions</h2>
+      {{#each passions}}
+      <div class="tc-passion">{{#if this.iconHref}}<img src="{{this.iconHref}}" width="16" height="16" alt="">{{/if}}<span>{{this.name}}</span></div>
+      {{/each}}
+    </section>
+    {{/if}}
+  </aside>
+
+  <main class="tc-main">
+    {{#if cv.aboutText}}
+    <section>
+      <h2>About</h2>
+      <div class="tc-about">{{{cv.aboutHtml}}}</div>
+    </section>
+    {{/if}}
+
+    {{#if experiences.length}}
+    <section>
+      <h2>Experience</h2>
+      {{#each experiences}}
+      <div class="tc-item">
+        <div class="tc-item-head">
+          <div>
+            <div class="tc-item-title">{{this.role}}</div>
+            <div class="tc-item-sub">{{this.company}}{{#if this.companyUrl}} · <a href="{{this.companyUrl}}" target="_blank">{{this.companyHost}}</a>{{/if}}{{#if this.location}} · {{this.location}}{{/if}}</div>
+          </div>
+          <span class="tc-item-date">{{this.startLabel}} – {{this.endLabel}}</span>
+        </div>
+        {{#if this.points.length}}
+        <ul class="tc-item-list">
+          {{#each this.points}}<li>{{this.text}}{{#if this.skillRef}} <span class="tc-skill-ref">— {{this.skillRef}}</span>{{/if}}</li>{{/each}}
+        </ul>
+        {{/if}}
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if projects.length}}
+    <section>
+      <h2>Projects</h2>
+      {{#each projects}}
+      <div class="tc-item">
+        <div class="tc-item-head">
+          <div>
+            <div class="tc-item-title">{{this.name}}</div>
+            <div class="tc-item-sub">{{#if this.subtitle}}{{this.subtitle}}{{/if}}{{#if this.liveUrl}} · <a href="{{this.liveUrl}}" target="_blank">Live</a>{{/if}}{{#if this.sourceUrl}} · <a href="{{this.sourceUrl}}" target="_blank">Source</a>{{/if}}</div>
+          </div>
+          <span class="tc-item-date">{{this.startLabel}} – {{this.endLabel}}</span>
+        </div>
+        {{#if this.points.length}}
+        <ul class="tc-item-list">
+          {{#each this.points}}<li>{{this.text}}{{#if this.skillRef}} <span class="tc-skill-ref">— {{this.skillRef}}</span>{{/if}}</li>{{/each}}
+        </ul>
+        {{/if}}
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    {{#if education.length}}
+    <section>
+      <h2>Education</h2>
+      {{#each education}}
+      <div class="tc-item">
+        <div class="tc-item-head">
+          <div>
+            <div class="tc-item-title">{{this.title}}</div>
+            <div class="tc-item-sub">{{this.school}}</div>
+          </div>
+          <span class="tc-item-date">{{this.startLabel}} – {{this.endLabel}}</span>
+        </div>
+      </div>
+      {{/each}}
+    </section>
+    {{/if}}
+  </main>
+</div>

@@ -1,0 +1,115 @@
+<div class="ats-container">
+  <header class="ats-header">
+    <svg class="ats-triangle" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <polygon points="0,0 100,0 50,30"/>
+    </svg>
+    <div class="ats-header-grid">
+      <div class="ats-id">
+        <h1>{{cv.displayName}}</h1>
+        {{#if cv.titleText}}<div class="ats-title">{{cv.titleText}}</div>{{/if}}
+        {{#if cv.availability}}<div class="ats-availability">Disponibilité : {{cv.availability}}</div>{{/if}}
+        {{#each contacts}}{{#if (eq this.slot "email")}}<div class="ats-email">{{this.displayValue}}</div>{{/if}}{{/each}}
+        {{#if links.length}}
+        <div class="ats-links">
+          {{#each links}}{{#if this.linkHref}}<a href="{{this.linkHref}}" target="_blank" rel="noopener">{{this.text}}</a>{{else}}<span>{{this.text}}</span>{{/if}}{{#unless @last}}<span class="ats-links-sep">·</span>{{/unless}}{{/each}}
+        </div>
+        {{/if}}
+      </div>
+      <div class="ats-photo">
+        {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="{{cv.displayName}}">{{else}}<span class="ats-initials">{{cv.initials}}</span>{{/if}}
+      </div>
+      <div class="ats-coords">
+        {{#each contacts}}{{#if (eq this.slot "phone")}}<div class="ats-phone">{{this.displayValue}}</div>{{/if}}{{/each}}
+        {{#each contacts}}{{#if (eq this.slot "city")}}<div class="ats-city">{{this.displayValue}}</div>{{/if}}{{/each}}
+      </div>
+    </div>
+  </header>
+
+  {{#if cv.aboutText}}
+  <section>
+    <h2>Profil</h2>
+    <p class="ats-about">{{cv.aboutText}}</p>
+  </section>
+  {{/if}}
+
+  {{#if skills.hard.length}}
+  <section>
+    <h2>Compétences techniques</h2>
+    <p class="ats-skill-line">{{#each skills.hard}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}</p>
+  </section>
+  {{/if}}
+
+  {{#if skills.soft.length}}
+  <section>
+    <h2>Savoir-être</h2>
+    <p class="ats-skill-line">{{#each skills.soft}}{{this.name}}{{#unless @last}}, {{/unless}}{{/each}}</p>
+  </section>
+  {{/if}}
+
+  {{#if languages.length}}
+  <section>
+    <h2>Langues</h2>
+    <ul class="ats-flat">
+      {{#each languages}}<li>{{this.name}} — {{this.level}}</li>{{/each}}
+    </ul>
+  </section>
+  {{/if}}
+
+  {{#if passions.length}}
+  <section>
+    <h2>Centres d'intérêt</h2>
+    <ul class="ats-flat">
+      {{#each passions}}<li>{{this.name}}</li>{{/each}}
+    </ul>
+  </section>
+  {{/if}}
+
+  {{#if experiences.length}}
+  <section>
+    <h2>Expériences professionnelles</h2>
+    {{#each experiences}}
+    <div class="ats-item">
+      <h3>{{this.role}}</h3>
+      <div class="ats-meta">{{this.company}}{{#if this.location}}, {{this.location}}{{/if}} — {{this.startMachine}} – {{this.endMachine}}</div>
+      {{#if this.summary}}<p class="ats-summary">{{this.summary}}</p>{{/if}}
+      {{#if this.points.length}}
+      <ul>
+        {{#each this.points}}<li>{{this.text}}</li>{{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+
+  {{#if projects.length}}
+  <section>
+    <h2>Projets</h2>
+    {{#each projects}}
+    <div class="ats-item">
+      <h3>{{this.name}}</h3>
+      <div class="ats-meta">{{this.startMachine}} – {{this.endMachine}}{{#if this.link}} · {{this.link}}{{/if}}</div>
+      {{#if this.longDescription}}<p class="ats-summary">{{this.longDescription}}</p>{{/if}}
+      {{#if this.points.length}}
+      <ul>
+        {{#each this.points}}<li>{{this.text}}</li>{{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+
+  {{#if education.length}}
+  <section>
+    <h2>Formation</h2>
+    {{#each education}}
+    <div class="ats-item">
+      <h3>{{this.title}}</h3>
+      <div class="ats-meta">{{this.school}}{{#if this.school}} — {{/if}}{{this.startMachine}} – {{this.endMachine}}</div>
+      {{#if this.description}}<p class="ats-summary">{{this.description}}</p>{{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+</div>
