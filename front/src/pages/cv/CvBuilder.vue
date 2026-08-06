@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCvStore } from '@/stores/cv'
 import * as api from '@/lib/api/cv'
 import ImageGallery from '@/components/admin/ImageGallery.vue'
+import OrderedPicker from '@/components/cv/OrderedPicker.vue'
+import StylePicker from '@/components/cv/StylePicker.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -11,6 +13,7 @@ const store = useCvStore()
 
 const isEdit = !!route.params.id
 const saving = ref(false)
+const saveError = ref('')
 
 const form = ref({
   name: '',
@@ -28,6 +31,7 @@ const form = ref({
   educationIds: [] as string[],
   contactIds: [] as string[],
   projectBullets: {} as Record<string, number[]>,
+  style: 'classic',
 })
 
 const skills = ref<any[]>([])
@@ -41,8 +45,24 @@ const allImages = ref<any[]>([])
 const showImageGallery = ref(false)
 
 const step = ref(1)
+const stepCardRef = ref<HTMLElement | null>(null)
+
+function canGoBack(i: number): boolean {
+  return i + 1 < step.value
+}
+
+function goToStep(i: number) {
+  if (canGoBack(i)) step.value = i + 1
+}
+
+watch(step, () => { stepCardRef.value?.scrollTo({ top: 0 }) })
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+})
 
 onMounted(async () => {
+  document.body.style.overflow = 'hidden'
   try {
     const [s, l, p, e, pr, ed, co] = await Promise.all([
       api.getSkills(), api.getLanguages(), api.getPassions(),
@@ -78,6 +98,7 @@ onMounted(async () => {
       educationIds: cv.education?.map((e: any) => e.id) || [],
       contactIds: cv.contacts?.map((c: any) => c.id) || [],
       projectBullets: cv.projectBullets || {},
+      style: cv.style || 'classic',
     }
   }
 })
@@ -88,12 +109,29 @@ function toggle(arr: string[], id: string) {
     arr.splice(idx, 1)
   } else {
     arr.push(id)
-    const proj = projects.value.find(p => p.id === id)
-    if (proj?.projectPoints?.length) {
-      form.value.projectBullets[id] = proj.projectPoints.map((_: any, i: number) => i)
-    }
   }
 }
+
+// When projects are added via OrderedPicker (which mutates form.projectIds),
+// auto-select all their bullets by default, and clean up removed projects.
+watch(
+  () => form.value.projectIds,
+  (next, prev) => {
+    const prevSet = new Set(prev ?? [])
+    const nextSet = new Set(next ?? [])
+    for (const id of next ?? []) {
+      if (prevSet.has(id)) continue
+      if (form.value.projectBullets[id] !== undefined) continue
+      const proj = projects.value.find((p: any) => p.id === id)
+      if (proj?.projectPoints?.length) {
+        form.value.projectBullets[id] = proj.projectPoints.map((_: any, i: number) => i)
+      }
+    }
+    for (const key of Object.keys(form.value.projectBullets)) {
+      if (!nextSet.has(key)) delete form.value.projectBullets[key]
+    }
+  }
+)
 
 function toggleBullet(projectId: string, idx: number) {
   const bullets = form.value.projectBullets[projectId]
@@ -113,6 +151,7 @@ function previewProjBullets(proj: any): any[] {
 
 async function save() {
   saving.value = true
+  saveError.value = ''
   try {
     if (isEdit) {
       await api.updateCv(route.params.id as string, form.value)
@@ -121,23 +160,59 @@ async function save() {
     }
     router.push('/admin/cvs')
   } catch (e: any) {
-    alert('Error: ' + e.message)
+    saveError.value = 'Error: ' + e.message
   } finally {
     saving.value = false
   }
 }
 
-const linkedPreview = computed(() => ({
-  skills: skills.value.filter(s => form.value.skillIds?.includes(s.id)),
-  languages: languages.value.filter(l => form.value.languageIds?.includes(l.id)),
-  passions: passions.value.filter(p => form.value.passionIds?.includes(p.id)),
-  experiences: experiences.value.filter(e => form.value.experienceIds?.includes(e.id)),
-  projects: projects.value.filter(p => form.value.projectIds?.includes(p.id)),
-  education: education.value.filter(e => form.value.educationIds?.includes(e.id)),
-  contacts: contacts.value.filter(c => form.value.contactIds?.includes(c.id)),
-  pictureId: form.value.pictureId,
-  availability: form.value.availability,
-}))
+const linkedPreview = computed(() => {
+  const ordered = (ids: string[] | undefined, map: Map<string, any>) =>
+    (ids ?? []).map(id => map.get(id)).filter((x): x is any => x !== undefined)
+  return {
+    skills: ordered(form.value.skillIds, skillMap.value),
+    languages: ordered(form.value.languageIds, languageMap.value),
+    passions: ordered(form.value.passionIds, passionMap.value),
+    experiences: ordered(form.value.experienceIds, experienceMap.value),
+    projects: ordered(form.value.projectIds, projectMap.value),
+    education: ordered(form.value.educationIds, educationMap.value),
+    contacts: ordered(form.value.contactIds, contactMap.value),
+    pictureId: form.value.pictureId,
+    availability: form.value.availability,
+  }
+})
+
+function byId(arr: any[]): Map<string, any> {
+  return new Map(arr.map((x: any) => [x.id, x]))
+}
+const skillMap = computed(() => byId(skills.value))
+const languageMap = computed(() => byId(languages.value))
+const passionMap = computed(() => byId(passions.value))
+const experienceMap = computed(() => byId(experiences.value))
+const projectMap = computed(() => byId(projects.value))
+const educationMap = computed(() => byId(education.value))
+const contactMap = computed(() => byId(contacts.value))
+
+const skillPickerItems = computed(() =>
+  skills.value.map((s: any) => ({
+    id: s.id,
+    label: s.name,
+    subtitle: s.level != null ? `${s.level}%` : s.cvCategory,
+    icon: s.icon,
+    group: s.cvCategory,
+  }))
+)
+const passionPickerItems = computed(() =>
+  passions.value.map((p: any) => ({ id: p.id, label: p.name, icon: p.icon }))
+)
+const projectPickerItems = computed(() =>
+  projects.value.map((pr: any) => ({
+    id: pr.id,
+    label: pr.title,
+    subtitle: pr.subtitle,
+    icon: pr.icon,
+  }))
+)
 
 const displayName = computed(() => form.value.candidateName || form.value.name)
 
@@ -165,8 +240,9 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto px-4 py-8">
-    <div class="flex items-center justify-between mb-8">
+  <!-- h-[calc(100vh-80px)] compensates AppLayout main's pt-20 top padding (the admin pt-0 class loses to scoped CSS specificity) -->
+  <div class="max-w-4xl mx-auto px-4 pt-6 h-[calc(100vh-80px)] flex flex-col gap-6 overflow-hidden">
+    <div class="flex-none flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-heading font-bold">{{ isEdit ? 'Edit CV' : 'Create CV' }}</h1>
         <p class="text-surface-500 mt-1">Build your CV from existing data</p>
@@ -177,14 +253,28 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
       </button>
     </div>
 
-    <div class="flex gap-2 mb-8">
-      <div v-for="(s, i) in steps" :key="i"
-        class="flex-1 h-2 rounded-full transition-colors"
-        :class="i + 1 <= step ? 'bg-accent' : 'bg-gray-200 dark:bg-surface-700'">
+    <div class="flex-none">
+      <p class="text-xs text-surface-500 mb-2">Step {{ step }} / {{ steps.length }} — {{ steps[step - 1] }}</p>
+      <div class="flex gap-2">
+        <div v-for="(s, i) in steps" :key="i"
+          class="flex-1 h-2 rounded-full transition-colors"
+          :class="i + 1 === step
+            ? 'bg-accent ring-2 ring-accent/25 cursor-default'
+            : (canGoBack(i) ? 'bg-accent/60 cursor-pointer' : 'bg-gray-200 dark:bg-surface-700 cursor-default')"
+          :title="s"
+          :role="canGoBack(i) ? 'button' : undefined"
+          :tabindex="canGoBack(i) ? 0 : -1"
+          :aria-label="canGoBack(i) ? 'Go back to step ' + (i + 1) + ': ' + s : s"
+          @click="goToStep(i)"
+          @keydown.enter="goToStep(i)"
+          @keydown.space.prevent="goToStep(i)">
+        </div>
       </div>
     </div>
 
-    <div class="bg-surface dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-surface-700 p-6 max-h-[calc(100vh-220px)] overflow-y-auto">
+    <div ref="stepCardRef" class="flex-1 min-h-0 overflow-y-auto bg-surface dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-surface-700 p-6">
+      <Transition name="step" mode="out-in">
+        <div :key="step">
       <!-- Step 1: Basic Info -->
       <div v-if="step === 1" class="space-y-4">
         <div>
@@ -242,35 +332,16 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
           <textarea v-model="form.aboutText" rows="4" placeholder="Describe yourself..."
             class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-accent/50 outline-none resize-none"></textarea>
         </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Style du CV</label>
+          <StylePicker v-model="form.style" />
+        </div>
       </div>
 
       <!-- Step 2: Skills -->
       <div v-if="step === 2">
-        <p class="text-sm text-surface-500 mb-4">Select skills to include</p>
-
-        <p class="text-sm font-medium mb-3">Hard Skills</p>
-        <div class="flex flex-wrap gap-2 mb-6">
-          <button v-for="skill in skills.filter(s => s.cvCategory === 'hard')" :key="skill.id"
-            @click="toggle(form.skillIds, skill.id)"
-            class="px-3 py-1.5 rounded-xl text-sm border transition-all cursor-pointer"
-            :class="form.skillIds.includes(skill.id)
-              ? 'bg-accent text-white border-accent'
-              : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
-            {{ skill.name }}
-          </button>
-        </div>
-
-        <p class="text-sm font-medium mb-3">Soft Skills</p>
-        <div class="flex flex-wrap gap-2">
-          <button v-for="skill in skills.filter(s => s.cvCategory === 'soft')" :key="skill.id"
-            @click="toggle(form.skillIds, skill.id)"
-            class="px-3 py-1.5 rounded-xl text-sm border transition-all cursor-pointer"
-            :class="form.skillIds.includes(skill.id)
-              ? 'bg-accent text-white border-accent'
-              : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
-            {{ skill.name }}
-          </button>
-        </div>
+        <p class="text-sm text-surface-500 mb-4">Select skills to include, then drag or use the arrows to set the display order</p>
+        <OrderedPicker :items="skillPickerItems" v-model="form.skillIds" />
       </div>
 
       <!-- Step 3: Languages & Passions -->
@@ -290,16 +361,7 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
         </div>
         <div>
           <p class="text-sm font-medium mb-3">Passions</p>
-          <div class="flex flex-wrap gap-2">
-            <button v-for="item in passions" :key="item.id"
-              @click="toggle(form.passionIds, item.id)"
-              class="px-3 py-1.5 rounded-xl text-sm border transition-all cursor-pointer"
-              :class="form.passionIds.includes(item.id)
-                ? 'bg-accent text-white border-accent'
-                : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
-              {{ item.name }}
-            </button>
-          </div>
+          <OrderedPicker :items="passionPickerItems" v-model="form.passionIds" />
         </div>
       </div>
 
@@ -322,26 +384,25 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
         </div>
         <div>
           <p class="text-sm font-medium mb-3">Projects</p>
-          <div class="space-y-2">
-            <template v-for="item in projects" :key="item.id">
-              <button @click="toggle(form.projectIds, item.id)"
-                class="w-full text-left px-4 py-3 rounded-xl border text-sm transition-all cursor-pointer"
-                :class="form.projectIds.includes(item.id)
-                  ? 'bg-accent/10 border-accent text-accent'
-                  : 'border-gray-200 dark:border-surface-700 hover:border-accent/50'">
-                <span class="font-medium">{{ item.title }}</span>
-                <span v-if="item.subtitle" class="text-surface-500"> - {{ item.subtitle }}</span>
-              </button>
-              <div v-if="form.projectIds.includes(item.id) && item.projectPoints?.length" class="ml-4 pl-3 border-l-2 border-accent/30 space-y-1 py-1">
-                <label v-for="(d, i) in item.projectPoints" :key="i"
-                  class="flex items-start gap-2 text-xs cursor-pointer py-0.5">
-                  <input type="checkbox" :checked="form.projectBullets[String(item.id)]?.includes(Number(i)) ?? true"
-                    @change="toggleBullet(String(item.id), Number(i))"
-                    class="mt-0.5 accent-accent cursor-pointer" />
-                  <span class="text-surface-600 dark:text-surface-400">{{ d.text || d }}</span>
-                </label>
+          <OrderedPicker :items="projectPickerItems" v-model="form.projectIds" />
+          <div v-if="linkedPreview.projects.length" class="mt-4">
+            <p class="text-sm font-medium mb-2">Project bullets (optional)</p>
+            <div class="space-y-2">
+              <div v-for="item in linkedPreview.projects" :key="item.id"
+                class="rounded-xl border border-gray-200 dark:border-surface-700 p-3">
+                <p class="text-sm font-medium mb-1">{{ item.title }}</p>
+                <div v-if="item.projectPoints?.length" class="ml-1 space-y-1">
+                  <label v-for="(d, i) in item.projectPoints" :key="i"
+                    class="flex items-start gap-2 text-xs cursor-pointer py-0.5">
+                    <input type="checkbox" :checked="form.projectBullets[String(item.id)]?.includes(Number(i)) ?? true"
+                      @change="toggleBullet(String(item.id), Number(i))"
+                      class="mt-0.5 accent-accent cursor-pointer" />
+                    <span class="text-surface-600 dark:text-surface-400">{{ d.text || d }}</span>
+                  </label>
+                </div>
+                <p v-else class="text-xs text-surface-400">No selectable points</p>
               </div>
-            </template>
+            </div>
           </div>
         </div>
       </div>
@@ -515,24 +576,36 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
           </div>
         </div>
       </div>
+        </div>
+      </Transition>
     </div>
 
-    <div class="flex justify-between mt-6">
-      <button @click="step = Math.max(1, step - 1)"
-        v-if="step > 1"
-        class="px-6 py-2.5 border border-gray-200 dark:border-surface-700 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer">
-        Previous
-      </button>
-      <div v-else></div>
+    <div class="flex-none -mx-4 px-4 pb-2 pt-3 bg-white/90 dark:bg-surface-900/90 backdrop-blur-md border-t border-gray-200 dark:border-surface-700 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)]">
+      <p v-if="saveError" class="text-error text-sm mb-3">{{ saveError }}</p>
+      <div class="flex items-center justify-between gap-3">
+        <button @click="step = Math.max(1, step - 1)"
+          type="button"
+          :disabled="step === 1"
+          class="min-w-[110px] px-6 py-2.5 border border-gray-200 dark:border-surface-700 rounded-xl transition-colors"
+          :class="step === 1 ? 'invisible' : 'hover:bg-surface-100 dark:hover:bg-surface-800 cursor-pointer'">
+          Previous
+        </button>
 
-      <button v-if="step < 7" @click="step = step + 1"
-        class="px-6 py-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover transition-colors cursor-pointer">
-        Next
-      </button>
-      <button v-else @click="save" :disabled="saving || !form.name"
-        class="px-6 py-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50 cursor-pointer">
-        {{ saving ? 'Saving...' : (isEdit ? 'Update CV' : 'Create CV') }}
-      </button>
+        <button v-if="step < 7" @click="step = step + 1" type="button"
+          class="min-w-[140px] px-6 py-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover transition-colors cursor-pointer">
+          Next
+        </button>
+        <button v-else @click="save" type="button" :disabled="saving || !form.name"
+          class="min-w-[140px] px-6 py-2.5 bg-accent text-white rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50 cursor-pointer">
+          {{ saving ? 'Saving...' : (isEdit ? 'Update CV' : 'Create CV') }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.step-enter-active, .step-leave-active { transition: opacity 0.18s ease, transform 0.18s ease; }
+.step-enter-from { opacity: 0; transform: translateY(8px); }
+.step-leave-to { opacity: 0; transform: translateY(-4px); }
+</style>
