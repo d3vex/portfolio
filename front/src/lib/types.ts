@@ -83,3 +83,33 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   page: number
   pageSize: number
 }
+
+export type CvStyleId = 'classic' | 'ats' | 'two-column-blue'
+
+export interface CvStyle {
+  id: CvStyleId
+  name: string
+  description: string
+  accent: string
+  sidebar: string
+}
+
+export interface Cv {
+  id: string
+  name: string
+  candidateName?: string
+  specialization?: string
+  titleOverride?: string
+  aboutText?: string
+  availability?: string
+  isDefault: boolean
+  style: CvStyleId
+  projectBullets?: Record<string, number[]>
+  skills: unknown[]
+  projects: unknown[]
+  passions: unknown[]
+  languages: unknown[]
+  experiences: unknown[]
+  education: unknown[]
+  contacts: unknown[]
+}
