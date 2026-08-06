@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import * as crypto from 'crypto';
 
@@ -202,14 +203,22 @@ function sha256(password: string): string {
 
 async function seed() {
   const ds = new DataSource({
-    type: 'better-sqlite3',
-    database: 'data/cvmanager.sqlite',
+    type: 'mariadb',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    username: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS || '',
+    database: process.env.DB_NAME || 'cvmanager',
     entities: [__dirname + '/**/*.entity{.ts,.js}'],
     synchronize: true,
     logging: false,
   });
 
   await ds.initialize();
+  // The seed uses double-quoted identifiers (SQLite/Postgres style); MariaDB
+  // only treats `"..."` as identifiers with ANSI_QUOTES enabled, so scope it
+  // to this connection's session instead of rewriting every query.
+  await ds.query('SET SESSION sql_mode = CONCAT(@@sql_mode, ",ANSI_QUOTES")');
   console.log('📦 Connected to database\n');
 
   const em = ds.manager;
@@ -428,20 +437,20 @@ async function seed() {
       1,
     ]
   );
-  for (const sid of allSkillIds) {
-    await em.query(`INSERT INTO cv_skills ("cvsId", "skillsId") VALUES (?, ?)`, [cvId, sid]);
+  for (let i = 0; i < allSkillIds.length; i++) {
+    await em.query(`INSERT INTO cv_skills (id, "cvId", "skillId", "order") VALUES (?, ?, ?, ?)`, [crypto.randomUUID(), cvId, allSkillIds[i], i]);
   }
   for (const lid of languageIds) {
     await em.query(`INSERT INTO cv_languages ("cvsId", "languagesId") VALUES (?, ?)`, [cvId, lid]);
   }
-  for (const pid of passionIds) {
-    await em.query(`INSERT INTO cv_passions ("cvsId", "passionsId") VALUES (?, ?)`, [cvId, pid]);
+  for (let i = 0; i < passionIds.length; i++) {
+    await em.query(`INSERT INTO cv_passions (id, "cvId", "passionId", "order") VALUES (?, ?, ?, ?)`, [crypto.randomUUID(), cvId, passionIds[i], i]);
   }
   for (const eid of allExperienceIds) {
     await em.query(`INSERT INTO cv_experiences ("cvsId", "experiencesId") VALUES (?, ?)`, [cvId, eid]);
   }
-  for (const pid of projectIds) {
-    await em.query(`INSERT INTO cv_projects ("cvsId", "projectsId") VALUES (?, ?)`, [cvId, pid]);
+  for (let i = 0; i < projectIds.length; i++) {
+    await em.query(`INSERT INTO cv_projects (id, "cvId", "projectId", "order") VALUES (?, ?, ?, ?)`, [crypto.randomUUID(), cvId, projectIds[i], i]);
   }
   for (const eid of allEducationIds) {
     await em.query(`INSERT INTO cv_education ("cvsId", "educationId") VALUES (?, ?)`, [cvId, eid]);
