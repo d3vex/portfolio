@@ -1,21 +1,27 @@
-import type { ApiResponse } from '@/lib/types'
+import type { ApiResponse, CvStyle } from '@/lib/types'
 
-const API_BASE = 'http://localhost:3001/api'
+export const API_BASE = 'http://localhost:3001/api'
 
 function getToken(): string | null {
   return localStorage.getItem('cv_token')
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export interface RequestOptions extends RequestInit {
+  raw?: boolean
+  responseType?: 'blob' | 'text'
+}
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { raw = false, responseType, ...init } = options
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
+    ...(init.headers as Record<string, string>),
   }
   const token = getToken()
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers })
   if (res.status === 401 && !path.startsWith('/auth/')) {
     localStorage.removeItem('cv_token')
     localStorage.removeItem('cv_user')
@@ -25,6 +31,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }))
     throw new Error(err.message || err.error || 'Request failed')
+  }
+  if (raw) {
+    return res as T
+  }
+  if (responseType === 'blob') {
+    return res.blob() as Promise<T>
+  }
+  if (responseType === 'text') {
+    return res.text() as Promise<T>
   }
   return res.json()
 }
@@ -88,6 +103,38 @@ function entityPath(entity: string): string {
 
 export function getEntity(entity: string) {
   return request<any[]>(`/${entityPath(entity)}`)
+}
+
+export function getCvStyles(): Promise<CvStyle[]> {
+  return request<CvStyle[]>('/cv/styles')
+}
+
+export function getCvHtml(id: string, style: string): Promise<string> {
+  return request<string>(`/cv/${id}/render?style=${encodeURIComponent(style)}`, { responseType: 'text' })
+}
+
+export function getCvRenderUrl(id: string, style: string): string {
+  return `${API_BASE}/cv/${encodeURIComponent(id)}/render?style=${encodeURIComponent(style)}`
+}
+
+export async function exportCvPdf(id: string, style: string): Promise<void> {
+  const res = await request<Response>(`/cv/${id}/export`, {
+    method: 'POST',
+    body: JSON.stringify({ style }),
+    raw: true,
+  })
+  const blob = await res.blob()
+  const disposition = res.headers.get('Content-Disposition')
+  const match = disposition?.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i)
+  const filename = match?.[1] ? decodeURIComponent(match[1]) : `cv-${style}.pdf`
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
 }
 
 export function createEntity(entity: string, data: any) {
