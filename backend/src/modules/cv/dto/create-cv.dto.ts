@@ -62,4 +62,8 @@ export class CreateCvDto {
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
+
+  @IsOptional()
+  @IsString()
+  style?: string;
 }

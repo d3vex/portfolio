@@ -147,6 +147,7 @@ export class CvService {
       availability: original.availability,
       pictureId: original.pictureId,
       projectBullets: original.projectBullets,
+      style: original.style,
       isDefault: false,
     });
     entity.languages = original.languages || [];
