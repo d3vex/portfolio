@@ -14,3 +14,11 @@ coverage/
 *.tar.gz
 *.tgz
 *.tsbuildinfo
+*.heapsnapshot
+
+# Local tooling / agent state
+.omo/
+.codegraph/
+.codex/
+.claude/
+.cursor/
