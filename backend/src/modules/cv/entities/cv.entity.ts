@@ -1,12 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
-import { Skill } from '../../skill/entities/skill.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Language } from '../../language/entities/language.entity';
-import { Passion } from '../../passion/entities/passion.entity';
 import { Experience } from '../../experience/entities/experience.entity';
-import { Project } from '../../project/entities/project.entity';
 import { Education } from '../../education/entities/education.entity';
 import { Image } from '../../images/entities/image.entity';
 import { Contact } from '../../contact/entities/contact.entity';
+import { CvSkill } from './cv-skill.entity';
+import { CvProject } from './cv-project.entity';
+import { CvPassion } from './cv-passion.entity';
 
 @Entity('cvs')
 export class Cv {
@@ -28,25 +28,22 @@ export class Cv {
   @Column({ type: 'text', nullable: true })
   aboutText: string;
 
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'cv_skills' })
-  skills: Skill[];
+  @OneToMany(() => CvSkill, (link) => link.cv, { cascade: true })
+  skillLinks: CvSkill[];
 
   @ManyToMany(() => Language)
   @JoinTable({ name: 'cv_languages' })
   languages: Language[];
 
-  @ManyToMany(() => Passion)
-  @JoinTable({ name: 'cv_passions' })
-  passions: Passion[];
+  @OneToMany(() => CvPassion, (link) => link.cv, { cascade: true })
+  passionLinks: CvPassion[];
 
   @ManyToMany(() => Experience)
   @JoinTable({ name: 'cv_experiences' })
   experiences: Experience[];
 
-  @ManyToMany(() => Project)
-  @JoinTable({ name: 'cv_projects' })
-  projects: Project[];
+  @OneToMany(() => CvProject, (link) => link.cv, { cascade: true })
+  projectLinks: CvProject[];
 
   @ManyToMany(() => Education)
   @JoinTable({ name: 'cv_education' })

@@ -2,6 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Cv } from './entities/cv.entity';
+import { CvSkill } from './entities/cv-skill.entity';
+import { CvProject } from './entities/cv-project.entity';
+import { CvPassion } from './entities/cv-passion.entity';
 import { Skill } from '../skill/entities/skill.entity';
 import { Project } from '../project/entities/project.entity';
 import { Experience } from '../experience/entities/experience.entity';
@@ -13,10 +16,19 @@ import { Category } from '../category/entities/category.entity';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 
+type OrderedCv = Omit<Cv, 'skillLinks' | 'projectLinks' | 'passionLinks'> & {
+  skills: Skill[];
+  projects: Project[];
+  passions: Passion[];
+};
+
 @Injectable()
 export class CvService {
   constructor(
     @InjectRepository(Cv) private repo: Repository<Cv>,
+    @InjectRepository(CvSkill) private cvSkillRepo: Repository<CvSkill>,
+    @InjectRepository(CvProject) private cvProjectRepo: Repository<CvProject>,
+    @InjectRepository(CvPassion) private cvPassionRepo: Repository<CvPassion>,
     @InjectRepository(Skill) private skillRepo: Repository<Skill>,
     @InjectRepository(Project) private projectRepo: Repository<Project>,
     @InjectRepository(Experience) private experienceRepo: Repository<Experience>,
@@ -27,41 +39,101 @@ export class CvService {
     @InjectRepository(Category) private categoryRepo: Repository<Category>,
   ) {}
 
-  findAll() {
-    return this.repo.find({ relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true }, order: { createdAt: 'DESC' } });
+  async findAll(): Promise<OrderedCv[]> {
+    const cvs = await this.repo.find({
+      relationLoadStrategy: 'query',
+      relations: {
+        skillLinks: { skill: true },
+        projectLinks: { project: { projectPoints: true } },
+        passionLinks: { passion: true },
+        languages: true,
+        experiences: { experiencePoints: true },
+        education: true,
+        contacts: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+    return cvs.map((cv) => this.applyOrdering(cv));
   }
 
-  async findOne(id: string) {
-    const cv = await this.repo.findOne({ where: { id }, relations: { skills: true, languages: true, passions: true, experiences: true, projects: true, education: true, contacts: true } });
+  async findOne(id: string): Promise<OrderedCv> {
+    const cv = await this.repo.findOne({
+      where: { id },
+      relationLoadStrategy: 'query',
+      relations: {
+        skillLinks: { skill: true },
+        projectLinks: { project: { projectPoints: true } },
+        passionLinks: { passion: true },
+        languages: true,
+        experiences: { experiencePoints: true },
+        education: true,
+        contacts: true,
+      },
+    });
     if (!cv) throw new NotFoundException('CV not found');
-    return cv;
+    return this.applyOrdering(cv);
   }
 
   async create(dto: CreateCvDto) {
     const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, contactIds, ...rest } = dto;
     const entity = this.repo.create(rest);
-    entity.skills = skillIds?.length ? await this.skillRepo.findBy({ id: In(skillIds) }) : [];
     entity.languages = languageIds?.length ? await this.languageRepo.findBy({ id: In(languageIds) }) : [];
-    entity.passions = passionIds?.length ? await this.passionRepo.findBy({ id: In(passionIds) }) : [];
     entity.experiences = experienceIds?.length ? await this.experienceRepo.findBy({ id: In(experienceIds) }) : [];
-    entity.projects = projectIds?.length ? await this.projectRepo.findBy({ id: In(projectIds) }) : [];
     entity.education = educationIds?.length ? await this.educationRepo.findBy({ id: In(educationIds) }) : [];
     entity.contacts = contactIds?.length ? await this.contactRepo.findBy({ id: In(contactIds) }) : [];
-    return this.repo.save(entity);
+    const saved = await this.repo.save(entity);
+
+    if (skillIds?.length) {
+      const links = skillIds.map((skillId, i) => this.cvSkillRepo.create({ cvId: saved.id, skillId, order: i }));
+      await this.cvSkillRepo.save(links);
+    }
+    if (projectIds?.length) {
+      const links = projectIds.map((projectId, i) => this.cvProjectRepo.create({ cvId: saved.id, projectId, order: i }));
+      await this.cvProjectRepo.save(links);
+    }
+    if (passionIds?.length) {
+      const links = passionIds.map((passionId, i) => this.cvPassionRepo.create({ cvId: saved.id, passionId, order: i }));
+      await this.cvPassionRepo.save(links);
+    }
+
+    return this.findOne(saved.id);
   }
 
   async update(id: string, dto: UpdateCvDto) {
     const entity = await this.findOne(id);
-    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, contactIds, ...rest } = dto as any;
+    const { skillIds, languageIds, passionIds, experienceIds, projectIds, educationIds, contactIds, ...rest } = dto;
     Object.assign(entity, rest);
-    if (skillIds !== undefined) entity.skills = skillIds?.length ? await this.skillRepo.findBy({ id: In(skillIds) }) : [];
     if (languageIds !== undefined) entity.languages = languageIds?.length ? await this.languageRepo.findBy({ id: In(languageIds) }) : [];
-    if (passionIds !== undefined) entity.passions = passionIds?.length ? await this.passionRepo.findBy({ id: In(passionIds) }) : [];
     if (experienceIds !== undefined) entity.experiences = experienceIds?.length ? await this.experienceRepo.findBy({ id: In(experienceIds) }) : [];
-    if (projectIds !== undefined) entity.projects = projectIds?.length ? await this.projectRepo.findBy({ id: In(projectIds) }) : [];
     if (educationIds !== undefined) entity.education = educationIds?.length ? await this.educationRepo.findBy({ id: In(educationIds) }) : [];
     if (contactIds !== undefined) entity.contacts = contactIds?.length ? await this.contactRepo.findBy({ id: In(contactIds) }) : [];
-    return this.repo.save(entity);
+    await this.repo.save(entity);
+
+    if (skillIds !== undefined) {
+      await this.cvSkillRepo.delete({ cvId: id });
+      if (skillIds.length) {
+        const links = skillIds.map((skillId, i) => this.cvSkillRepo.create({ cvId: id, skillId, order: i }));
+        await this.cvSkillRepo.save(links);
+      }
+    }
+    if (projectIds !== undefined) {
+      await this.cvProjectRepo.delete({ cvId: id });
+      if (projectIds.length) {
+        const links = projectIds.map((projectId, i) => this.cvProjectRepo.create({ cvId: id, projectId, order: i }));
+        await this.cvProjectRepo.save(links);
+      }
+    }
+    if (passionIds !== undefined) {
+      await this.cvPassionRepo.delete({ cvId: id });
+      if (passionIds.length) {
+        const links = passionIds.map((passionId, i) => this.cvPassionRepo.create({ cvId: id, passionId, order: i }));
+        await this.cvPassionRepo.save(links);
+      }
+    }
+
+    return this.findOne(id);
   }
 
   async clone(id: string) {
@@ -77,18 +149,36 @@ export class CvService {
       projectBullets: original.projectBullets,
       isDefault: false,
     });
-    entity.skills = original.skills || [];
     entity.languages = original.languages || [];
-    entity.passions = original.passions || [];
     entity.experiences = original.experiences || [];
-    entity.projects = original.projects || [];
     entity.education = original.education || [];
     entity.contacts = original.contacts || [];
-    return this.repo.save(entity);
+    const saved = await this.repo.save(entity);
+
+    const [skillLinks, projectLinks, passionLinks] = await Promise.all([
+      this.cvSkillRepo.find({ where: { cvId: id }, order: { order: 'ASC' } }),
+      this.cvProjectRepo.find({ where: { cvId: id }, order: { order: 'ASC' } }),
+      this.cvPassionRepo.find({ where: { cvId: id }, order: { order: 'ASC' } }),
+    ]);
+    if (skillLinks.length) {
+      const links = skillLinks.map((l) => this.cvSkillRepo.create({ cvId: saved.id, skillId: l.skillId, order: l.order }));
+      await this.cvSkillRepo.save(links);
+    }
+    if (projectLinks.length) {
+      const links = projectLinks.map((l) => this.cvProjectRepo.create({ cvId: saved.id, projectId: l.projectId, order: l.order }));
+      await this.cvProjectRepo.save(links);
+    }
+    if (passionLinks.length) {
+      const links = passionLinks.map((l) => this.cvPassionRepo.create({ cvId: saved.id, passionId: l.passionId, order: l.order }));
+      await this.cvPassionRepo.save(links);
+    }
+
+    return this.findOne(saved.id);
   }
 
   async remove(id: string) {
-    const cv = await this.findOne(id);
+    const cv = await this.repo.findOne({ where: { id } });
+    if (!cv) throw new NotFoundException('CV not found');
     return this.repo.remove(cv);
   }
 
@@ -124,6 +214,17 @@ export class CvService {
       ...totals,
       specializationCount,
       recentCvs: cvs.slice(0, 5),
+    };
+  }
+
+  private applyOrdering(cv: Cv): OrderedCv {
+    const { skillLinks = [], projectLinks = [], passionLinks = [], ...rest } = cv;
+    const byOrder = (a: { order: number }, b: { order: number }) => a.order - b.order;
+    return {
+      ...rest,
+      skills: skillLinks.slice().sort(byOrder).map((l) => l.skill),
+      projects: projectLinks.slice().sort(byOrder).map((l) => l.project),
+      passions: passionLinks.slice().sort(byOrder).map((l) => l.passion),
     };
   }
 }
