@@ -429,12 +429,13 @@ async function seed() {
   const allExperienceIds = Object.values(experienceIds);
   const allEducationIds = Object.values(educationIds);
   await em.query(
-    `INSERT INTO cvs (id, name, specialization, "aboutText", availability, "isDefault") VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO cvs (id, name, specialization, "aboutText", availability, "isDefault", style) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       cvId, 'Loan MATA', 'webdev',
       'I am a passionate Full-Stack developer and infrastructure enthusiast currently studying at Montpellier Ynov Campus. I have hands-on experience with Vue 3, TypeScript, Python, Docker, Kubernetes, and cloud technologies.',
       "Recherche d'alternance: 1 sem ecole/ 2 semaine entreprise",
       1,
+      'classic',
     ]
   );
   for (let i = 0; i < allSkillIds.length; i++) {
