@@ -69,6 +69,9 @@ export class Cv {
   @Column({ type: 'boolean', default: false })
   isDefault: boolean;
 
+  @Column({ type: 'varchar', length: 64, default: 'classic' })
+  style: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
