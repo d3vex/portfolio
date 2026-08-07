@@ -315,7 +315,14 @@ export class RenderService {
         };
       });
 
-    const experiences = (cv.experiences || []).map((exp): CvPayloadExperience => ({
+    // Sort by the entity `order` column to match the global list order the
+    // builder previews (EducationService/ExperienceService.findAll order ASC).
+    // Without this, the ManyToMany relation order (join table) can invert the
+    // sections on the exported/printed CV compared to the on-screen preview.
+    const experiences = (cv.experiences || [])
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((exp): CvPayloadExperience => ({
       role: exp.title,
       company: exp.company,
       companyUrl: exp.companyUrl ?? null,
@@ -355,7 +362,10 @@ export class RenderService {
       order: project.order,
     }));
 
-    const education = (cv.education || []).map((edu): CvPayloadEducation => {
+    const education = (cv.education || [])
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((edu): CvPayloadEducation => {
       const start = edu.startDate || edu.date || null;
       return {
         title: edu.title,
