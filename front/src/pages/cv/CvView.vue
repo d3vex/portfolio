@@ -212,12 +212,12 @@ function buildPrintHtml(): string {
       const ref = d.skillIds?.length ? ` <span class="skill-ref">— ${skillN(d.skillIds)}</span>` : ''
       return `<li>${es(txt)}${ref}</li>`
     }).join('\n            ')
-    const subParts: string[] = []
-    if (proj.subtitle) subParts.push(`<span>${es(proj.subtitle)}</span>`)
-    if (proj.liveUrl) subParts.push(`<a href="${es(proj.liveUrl)}" target="_blank" class="exp-link">Live</a>`)
-    if (proj.sourceUrl) subParts.push(`<a href="${es(proj.sourceUrl)}" target="_blank" class="exp-link">Source</a>`)
-    const sub = subParts.length ? `<div class="exp-subtitle">${subParts.join(' ')}</div>` : ''
-    return `<div class="project-item"><div class="exp-header"><div><div class="exp-title">${es(proj.title)}</div>${sub}</div><span class="exp-date">${es(formatDate(proj.startDate))} - ${es(formatDate(proj.endDate))}</span></div>${items ? `<ul class="exp-desc">${items}</ul>` : ''}</div>`
+    const linkParts: string[] = []
+    if (proj.liveUrl) linkParts.push(`<a href="${es(proj.liveUrl)}" target="_blank" class="exp-link">Live</a>`)
+    if (proj.sourceUrl) linkParts.push(`<a href="${es(proj.sourceUrl)}" target="_blank" class="exp-link">Source</a>`)
+    const links = linkParts.length ? `<div class="exp-subtitle">${linkParts.join(' ')}</div>` : ''
+    const sub = proj.subtitle ? `<div class="exp-subtitle project-subtitle">${es(proj.subtitle)}</div>` : ''
+    return `<div class="project-item"><div class="exp-header"><div class="project-head"><div class="exp-title">${es(proj.title)}</div>${links}</div><span class="exp-date">${es(formatDate(proj.startDate))} - ${es(formatDate(proj.endDate))}</span></div>${sub}${items ? `<ul class="exp-desc">${items}</ul>` : ''}</div>`
   }).join('\n      ')
 
   const eduHtml = linkedData.value.education.map(edu =>
@@ -605,10 +605,9 @@ function hostname(url: string): string {
           <h2>Projets</h2>
           <div v-for="proj in linkedData.projects" :key="proj.id" class="project-item">
             <div class="exp-header">
-              <div>
+              <div class="project-head">
                 <div class="exp-title">{{ proj.title }}</div>
-                <div v-if="proj.subtitle || proj.liveUrl || proj.sourceUrl" class="exp-subtitle">
-                  <span v-if="proj.subtitle">{{ proj.subtitle }}</span>
+                <div v-if="proj.liveUrl || proj.sourceUrl" class="exp-subtitle">
                   <a v-if="proj.liveUrl" :href="proj.liveUrl" target="_blank" class="exp-link">
                     <Icon icon="mdi:external-link" class="w-3 h-3" />
                     Live
@@ -617,10 +616,11 @@ function hostname(url: string): string {
                     <Icon icon="mdi:github" class="w-3 h-3" />
                     Source
                   </a>
+                </div>
               </div>
+              <span class="exp-date">{{ formatDate(proj.startDate) }} - {{ formatDate(proj.endDate) }}</span>
             </div>
-            <span class="exp-date">{{ formatDate(proj.startDate) }} - {{ formatDate(proj.endDate) }}</span>
-            </div>
+            <div v-if="proj.subtitle" class="exp-subtitle project-subtitle">{{ proj.subtitle }}</div>
             <ul v-if="selectedProjectPoints(proj).length" class="exp-desc">
               <li v-for="(d, i) in selectedProjectPoints(proj)" :key="i">
                 {{ descriptionText(d) }}
@@ -901,6 +901,13 @@ function hostname(url: string): string {
   flex-wrap: wrap;
   gap: 5px;
 }
+.project-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.project-subtitle { margin-top: 4px; }
 .exp-title { font-size: 16px; font-weight: 700; color: var(--primary); }
 .exp-subtitle {
   font-size: 12px;

@@ -138,6 +138,10 @@ function escapeHtml(value: string): string {
 }
 
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+Handlebars.registerHelper('or', (...args: unknown[]) => {
+  args.pop();
+  return args.some(Boolean);
+});
 
 function contactSlot(contact: {
   label?: string | null;

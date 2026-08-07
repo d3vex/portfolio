@@ -99,12 +99,13 @@
       {{#each projects}}
       <div class="project-item">
         <div class="exp-header">
-          <div>
+          <div class="project-head">
             <div class="exp-title">{{this.name}}</div>
-            <div class="exp-subtitle">{{#if this.subtitle}}<span>{{this.subtitle}}</span>{{/if}}{{#if this.liveUrl}}<a href="{{this.liveUrl}}" target="_blank" class="exp-link">Live</a>{{/if}}{{#if this.sourceUrl}}<a href="{{this.sourceUrl}}" target="_blank" class="exp-link">Source</a>{{/if}}</div>
+            {{#if (or this.liveUrl this.sourceUrl)}}<div class="exp-subtitle">{{#if this.liveUrl}}<a href="{{this.liveUrl}}" target="_blank" class="exp-link">Live</a>{{/if}}{{#if this.sourceUrl}}<a href="{{this.sourceUrl}}" target="_blank" class="exp-link">Source</a>{{/if}}</div>{{/if}}
           </div>
           <span class="exp-date">{{this.startLabel}} - {{this.endLabel}}</span>
         </div>
+        {{#if this.subtitle}}<div class="exp-subtitle project-subtitle">{{this.subtitle}}</div>{{/if}}
         {{#if this.points.length}}
         <ul class="exp-desc">
           {{#each this.points}}
