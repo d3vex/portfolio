@@ -232,7 +232,7 @@ async function printCv() {
   let html: string
   try {
     if (cv.value?.id && chosenStyle.value) {
-      html = await api.getCvHtml(cv.value.id, chosenStyle.value)
+      html = await api.getCvHtml(cv.value.id, chosenStyle.value, pictureZoom.value)
     } else {
       html = buildPrintHtml()
     }
@@ -268,7 +268,7 @@ async function exportPdf() {
   exporting.value = true
   exportError.value = ''
   try {
-    await api.exportCvPdf(cv.value.id, chosenStyle.value)
+    await api.exportCvPdf(cv.value.id, chosenStyle.value, pictureZoom.value)
   } catch (e) {
     exportError.value = e instanceof Error ? e.message : 'Export failed'
   } finally {

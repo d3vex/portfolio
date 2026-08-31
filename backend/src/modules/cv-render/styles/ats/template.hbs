@@ -16,7 +16,7 @@
         {{/if}}
       </div>
       <div class="ats-photo">
-        {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="{{cv.displayName}}">{{else}}<span class="ats-initials">{{cv.initials}}</span>{{/if}}
+        {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="{{cv.displayName}}"{{#if cv.pictureStyle}} style="{{{cv.pictureStyle}}}"{{/if}}>{{else}}<span class="ats-initials">{{cv.initials}}</span>{{/if}}
       </div>
       <div class="ats-coords">
         {{#each contacts}}{{#if (eq this.slot "phone")}}<div class="ats-phone">{{this.displayValue}}</div>{{/if}}{{/each}}

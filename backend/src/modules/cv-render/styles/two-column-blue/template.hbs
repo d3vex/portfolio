@@ -1,7 +1,7 @@
 <div class="tc-container">
   <aside class="tc-sidebar">
     <div class="tc-photo">
-      {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="">{{else}}<span class="tc-initials">{{cv.initials}}</span>{{/if}}
+      {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt=""{{#if cv.pictureStyle}} style="{{{cv.pictureStyle}}}"{{/if}}>{{else}}<span class="tc-initials">{{cv.initials}}</span>{{/if}}
     </div>
     <h1>{{cv.displayName}}</h1>
     {{#if cv.titleText}}<div class="tc-badge">{{cv.titleText}}</div>{{/if}}

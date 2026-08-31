@@ -115,6 +115,7 @@ export interface CvRenderPayload {
     isDefault: boolean;
     style: string | null;
     pictureUrl: string | null;
+    pictureStyle: string | null;
     displayName: string;
     initials: string;
   };
@@ -234,8 +235,9 @@ export class RenderService {
     id: string,
     styleId: string | undefined,
     baseUrl: string,
+    zoom?: number,
   ): Promise<RenderResult> {
-    const { payload, displayName } = await this.buildPayload(id, baseUrl);
+    const { payload, displayName } = await this.buildPayload(id, baseUrl, zoom);
     const style = this.styles.get(styleId);
     const template = this.styles.getTemplate(style.id);
     const css = this.styles.getCss(style.id);
@@ -253,6 +255,7 @@ export class RenderService {
   private async buildPayload(
     id: string,
     baseUrl: string,
+    zoom?: number,
   ): Promise<{ payload: CvRenderPayload; displayName: string }> {
     const cv: OrderedCv = await this.cvService.findOne(id);
     const styleId = cv.style ?? null;
@@ -398,6 +401,10 @@ export class RenderService {
         isDefault: cv.isDefault,
         style: styleId,
         pictureUrl: cv.pictureId ? `${baseUrl}/api/images/${cv.pictureId}` : null,
+        pictureStyle:
+          cv.pictureId && zoom && zoom !== 1
+            ? `transform:scale(${zoom});`
+            : null,
         displayName,
         initials,
       },

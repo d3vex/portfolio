@@ -2,7 +2,7 @@
   <aside class="sidebar">
     <div>
       <div class="photo-placeholder">
-        {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt="">{{else}}<span class="photo-initials">{{cv.initials}}</span>{{/if}}
+        {{#if cv.pictureUrl}}<img src="{{cv.pictureUrl}}" alt=""{{#if cv.pictureStyle}} style="{{{cv.pictureStyle}}}"{{/if}}>{{else}}<span class="photo-initials">{{cv.initials}}</span>{{/if}}
       </div>
       <h1>{{cv.displayName}}</h1>
       <span class="title-badge">{{cv.titleText}}</span>

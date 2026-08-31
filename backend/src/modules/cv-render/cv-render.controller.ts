@@ -39,10 +39,17 @@ export class CvRenderController {
   async renderCv(
     @Param('id') id: string,
     @Query('style') style: string | undefined,
+    @Query('zoom') zoom: string | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const { html } = await this.render.renderHtml(id, style, this.buildBaseUrl(req));
+    const zoomValue = parseZoom(zoom);
+    const { html } = await this.render.renderHtml(
+      id,
+      style,
+      this.buildBaseUrl(req),
+      zoomValue,
+    );
     res.set({ 'Content-Type': 'text/html; charset=utf-8' });
     res.send(html);
   }
@@ -61,6 +68,7 @@ export class CvRenderController {
       id,
       dto.style,
       this.buildBaseUrl(req),
+      dto.zoom,
     );
     const pdf = await this.pdf.render(html);
     const filename = `${displayName || 'CV'}-${styleId}.pdf`
@@ -77,4 +85,11 @@ export class CvRenderController {
   private buildBaseUrl(req: Request): string {
     return `${req.protocol}://${req.get('host')}`;
   }
+}
+
+function parseZoom(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw === '') return undefined;
+  const value = Number(raw);
+  if (Number.isNaN(value)) return undefined;
+  return Math.min(2, Math.max(0.5, value));
 }

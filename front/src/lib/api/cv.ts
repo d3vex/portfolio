@@ -1,4 +1,12 @@
-import type { ApiResponse, CvStyle } from '@/lib/types'
+import type {
+  AiApplyPayload,
+  AiApplyResponse,
+  AiCvGenerationResult,
+  AiGenerationOptions,
+  AiStatus,
+  ApiResponse,
+  CvStyle,
+} from '@/lib/types'
 
 export const API_BASE = 'http://localhost:3001/api'
 
@@ -109,18 +117,38 @@ export function getCvStyles(): Promise<CvStyle[]> {
   return request<CvStyle[]>('/cv/styles')
 }
 
-export function getCvHtml(id: string, style: string): Promise<string> {
-  return request<string>(`/cv/${id}/render?style=${encodeURIComponent(style)}`, { responseType: 'text' })
+export function getAiStatus(): Promise<AiStatus> {
+  return request<AiStatus>('/ai/status')
+}
+
+export function generateCv(jobDescription: string, options?: AiGenerationOptions): Promise<AiCvGenerationResult> {
+  return request<AiCvGenerationResult>('/ai/generate-cv', {
+    method: 'POST',
+    body: JSON.stringify({ jobDescription, options }),
+  })
+}
+
+export function applySuggestions(payload: AiApplyPayload): Promise<AiApplyResponse> {
+  return request<AiApplyResponse>('/ai/apply-suggestions', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function getCvHtml(id: string, style: string, zoom?: number): Promise<string> {
+  const params = new URLSearchParams({ style })
+  if (zoom !== undefined && zoom !== 1) params.set('zoom', String(zoom))
+  return request<string>(`/cv/${id}/render?${params.toString()}`, { responseType: 'text' })
 }
 
 export function getCvRenderUrl(id: string, style: string): string {
   return `${API_BASE}/cv/${encodeURIComponent(id)}/render?style=${encodeURIComponent(style)}`
 }
 
-export async function exportCvPdf(id: string, style: string): Promise<void> {
+export async function exportCvPdf(id: string, style: string, zoom?: number): Promise<void> {
   const res = await request<Response>(`/cv/${id}/export`, {
     method: 'POST',
-    body: JSON.stringify({ style }),
+    body: JSON.stringify({ style, ...(zoom !== undefined && zoom !== 1 ? { zoom } : {}) }),
     raw: true,
   })
   const blob = await res.blob()
