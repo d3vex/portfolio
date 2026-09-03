@@ -49,7 +49,8 @@ export class CreateCvDto {
   contactIds?: string[];
 
   @IsOptional()
-  projectBullets?: Record<string, number[]>;
+  @IsArray()
+  cvProjectPointIds?: string[];
 
   @IsOptional()
   @IsString()

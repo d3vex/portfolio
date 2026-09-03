@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { Skill } from '../../skill/entities/skill.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Image } from '../../images/entities/image.entity';
 import { Link } from '../../project/entities/link.entity';
 import { ExperiencePoint } from './experience-point.entity';
+import { ExperienceTag } from './experience-tag.entity';
 
 @Entity('experiences')
 export class Experience {
@@ -30,12 +30,8 @@ export class Experience {
   @Column({ nullable: true })
   endDate: string;
 
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'experience_skills' })
-  skills: Skill[];
-
-  @Column({ type: 'json', nullable: true })
-  tags: string[];
+  @OneToMany(() => ExperienceTag, (tag) => tag.experience, { cascade: true, orphanedRowAction: 'delete' })
+  tags: ExperienceTag[];
 
   @OneToMany(() => Link, link => link.experience, { cascade: true, orphanedRowAction: 'delete' })
   links: Link[];

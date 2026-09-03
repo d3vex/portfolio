@@ -2,33 +2,60 @@ import type { Project } from '@/lib/types'
 
 const API_BASE = 'http://localhost:3001/api'
 
-let categoryCache: Record<string, string> | null = null
+interface CategoryMeta {
+  name: string
+  order: number
+}
 
-async function getCategoryMap(): Promise<Record<string, string>> {
+let categoryCache: Record<string, CategoryMeta> | null = null
+
+async function getCategoryMap(): Promise<Record<string, CategoryMeta>> {
   if (categoryCache) return categoryCache
   const res = await fetch(`${API_BASE}/categories`)
   if (!res.ok) throw new Error('Failed to fetch categories')
   const categories = await res.json()
-  const map: Record<string, string> = {}
+  const map: Record<string, CategoryMeta> = {}
   for (const cat of categories) {
-    map[cat.id] = cat.name
+    map[cat.id] = { name: cat.name, order: cat.order ?? 0 }
   }
   categoryCache = map
   return map
 }
 
-function mapProject(p: any, catMap: Record<string, string>): Project {
-  const categoryId = p.categories?.[0]?.id
+function pickDisplayCategory(p: any, catMap: Record<string, CategoryMeta>): string {
+  const ids = p.categories || []
+  if (!ids.length) return 'dev'
+  return ids
+    .filter((c: any) => c?.id)
+    .map((c: any) => ({ id: c.id, order: catMap[c.id]?.order ?? 0 }))
+    .sort((a: { order: number }, b: { order: number }) => b.order - a.order)[0].id
+}
+
+function mapProject(p: any, catMap: Record<string, CategoryMeta>): Project {
+  const categoryId = pickDisplayCategory(p, catMap)
   return {
     id: p.id,
     title: p.title,
     description: p.description || '',
     longDescription: p.longDescription || '',
-    category: (catMap[categoryId] || 'dev') as Project['category'],
-    technologies: (p.technologies || []).map((t: any) => (typeof t === 'string' ? t : t.name)),
+    category: (catMap[categoryId]?.name || 'dev') as Project['category'],
+    categories: (p.categories || [])
+      .filter((c: any) => c?.id)
+      .sort((a: any, b: any) => (catMap[a.id]?.order ?? 0) - (catMap[b.id]?.order ?? 0))
+      .map((c: any) => catMap[c.id]?.name || c.name || c.id),
+    technologies: (p.technologies || []).map((t: any) => ({
+      name: typeof t === 'string' ? t : t.name,
+      icon: typeof t === 'string' ? undefined : t.icon,
+    })),
     imageUrl: p.imageUrl || '',
-    liveUrl: p.liveUrl,
-    sourceUrl: p.sourceUrl,
+    links: (p.links || []).map((l: any) => ({
+      id: l.id,
+      label: l.label,
+      url: l.url,
+      icon: l.icon,
+      type: l.type,
+      order: l.order,
+    })),
     status: p.status || 'in-progress',
     featured: p.featured || false,
     timeline: (p.timelineEntries || []).map((t: any) => ({

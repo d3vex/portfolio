@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Experience } from './experience.entity';
+import { ExperiencePointSkill } from './experience-point-skill.entity';
 
 @Entity('experience_points')
 export class ExperiencePoint {
@@ -12,8 +13,8 @@ export class ExperiencePoint {
   @Column({ type: 'int', default: 0 })
   order: number;
 
-  @Column({ type: 'json', nullable: true })
-  skillIds: string[];
+  @OneToMany(() => ExperiencePointSkill, (link) => link.point, { cascade: true, orphanedRowAction: 'delete' })
+  skillLinks: ExperiencePointSkill[];
 
   @Column()
   experienceId: string;

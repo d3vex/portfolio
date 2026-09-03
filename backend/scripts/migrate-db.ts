@@ -31,8 +31,6 @@ const tablesInOrder = [
   'users',
   'profiles',
   'project_categories',
-  'project_skills',
-  'experience_skills',
   'cv_skills',
   'cv_languages',
   'cv_passions',

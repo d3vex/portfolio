@@ -10,7 +10,6 @@ import { Public } from '../../common/decorators/public.decorator';
 export class ImagesController {
   constructor(private service: ImagesService) {}
 
-  @Public()
   @Post('upload')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload an image' })
@@ -27,7 +26,6 @@ export class ImagesController {
     return { id: image.id, url: `/api/images/${image.id}` };
   }
 
-  @Public()
   @Get()
   @ApiOperation({ summary: 'List all images (metadata only)' })
   async getAll() {

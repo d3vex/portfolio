@@ -15,8 +15,16 @@ export class TimelineService {
 
   async getTimeline(): Promise<any[]> {
     const [experiences, education] = await Promise.all([
-      this.experienceRepo.find({ relations: { skills: true, links: true } }),
-      this.educationRepo.find({ relations: { projects: true } }),
+      this.experienceRepo.find({
+        relations: {
+          tags: true,
+          links: true,
+          experiencePoints: { skillLinks: { skill: true } },
+        },
+      }),
+      this.educationRepo.find({
+        relations: { projects: { technologies: true, links: true }, tags: true },
+      }),
     ]);
 
     const timelineEvents = [
@@ -28,7 +36,7 @@ export class TimelineService {
         title: exp.title,
         subtitle: exp.company,
         description: exp.description || '',
-        tags: exp.tags || exp.skills?.map(s => s.id) || [],
+        tags: exp.tags?.map((t) => t.value) || exp.experiencePoints?.flatMap((p) => p.skillLinks?.map((s) => s.skill.id) || []) || [],
         icon: 'mdi:briefcase',
       })),
       ...education.map(edu => ({
@@ -39,14 +47,14 @@ export class TimelineService {
         title: edu.title,
         subtitle: edu.school || '',
         description: edu.description || '',
-        tags: edu.tags || [],
+        tags: edu.tags?.map((t) => t.value) || [],
         icon: 'mdi:school',
         subProjects: (edu.projects || []).map(p => ({
           title: p.title,
           description: p.description || '',
-          tags: p.technologies?.map(t => t.name) || [],
+          tags: p.technologies?.map((t) => t.name) || [],
           imageUrl: p.imageUrl,
-          link: p.url,
+          link: this.mainProjectLink(p.links),
         })),
       })),
     ];
@@ -60,5 +68,11 @@ export class TimelineService {
     });
 
     return timelineEvents;
+  }
+
+  private mainProjectLink(links?: { url: string }[]): string | undefined {
+    if (!links?.length) return undefined;
+    const main = links.find((l) => /demo|website|live/i.test(l.url));
+    return (main ?? links[0]).url;
   }
 }

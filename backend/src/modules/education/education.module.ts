@@ -3,10 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EducationController } from './education.controller';
 import { EducationService } from './education.service';
 import { Education } from './entities/education.entity';
+import { EducationTag } from './entities/education-tag.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Education])],
+  imports: [TypeOrmModule.forFeature([Education, EducationTag])],
   controllers: [EducationController],
   providers: [EducationService],
+  exports: [EducationService],
 })
 export class EducationModule {}

@@ -225,17 +225,17 @@ async function seed() {
 
   // ── 1. Clear existing data (order matters for FK constraints) ──────────
   console.log('🗑️  Clearing existing data...');
-  await em.query('DELETE FROM cvs');
+  await em.query('DELETE FROM skills');
   await em.query('DELETE FROM projects');
   await em.query('DELETE FROM experiences');
   await em.query('DELETE FROM education');
-  await em.query('DELETE FROM skills');
   await em.query('DELETE FROM languages');
   await em.query('DELETE FROM passions');
   await em.query('DELETE FROM contacts');
   await em.query('DELETE FROM profiles');
   await em.query('DELETE FROM categories');
   await em.query('DELETE FROM users');
+  await em.query('DELETE FROM cvs');
   console.log('   Done\n');
 
   // ── 2. Categories ──────────────────────────────────────────────────────
@@ -301,9 +301,15 @@ async function seed() {
     const categoryId = categoryByName[s.category] || null;
     const cvCategory = s.category === 'sysadmin' ? 'soft' : 'hard';
     await em.query(
-      `INSERT INTO skills (id, name, icon, "categoryId", "cvCategory", description, keywords, level, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, s.name, s.icon, categoryId, cvCategory, null, JSON.stringify(s.keywords), s.level, i]
+      `INSERT INTO skills (id, name, icon, "categoryId", "cvCategory", description, level, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, s.name, s.icon, categoryId, cvCategory, null, s.level, i]
     );
+    for (const kw of s.keywords) {
+      await em.query(
+        `INSERT INTO skill_keywords ("skillId", value) VALUES (?, ?)`,
+        [id, kw]
+      );
+    }
     skillIds[s.id] = id;
     console.log(`   ✅ Skill: ${s.name} (${s.level}%)`);
   }
@@ -345,6 +351,16 @@ async function seed() {
     console.log(`   ✅ Passion: ${p.name}`);
   }
 
+  // Helper to link skill keywords / points to skills by name
+  const skillIdByName: Record<string, string> = {};
+  for (const ms of MOCK_SKILLS) {
+    skillIdByName[ms.name.toLowerCase()] = skillIds[ms.id];
+  }
+  const skillIdsFor = (names: string[]): string[] =>
+    names
+      .map((n) => skillIdByName[n.toLowerCase()])
+      .filter((id): id is string => Boolean(id));
+
   // ── 8. Education (from timeline mock data) ──────────────────────────────
   console.log('\n🎓 Seeding education...');
   const educationIds: Record<string, string> = {};
@@ -353,9 +369,15 @@ async function seed() {
     const e = timelineEducations[i];
     const id = crypto.randomUUID();
     await em.query(
-      `INSERT INTO education (id, title, school, "startDate", "endDate", description, tags, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, e.title, e.subtitle, e.startDate, e.endDate || null, e.description, JSON.stringify(e.tags), i]
+      `INSERT INTO education (id, title, school, "startDate", "endDate", description, "order") VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, e.title, e.subtitle, e.startDate, e.endDate || null, e.description, i]
     );
+    for (const tag of e.tags) {
+      await em.query(
+        `INSERT INTO education_tags ("educationId", value) VALUES (?, ?)`,
+        [id, tag]
+      );
+    }
     educationIds[e.id] = id;
     console.log(`   ✅ Education: ${e.title} @ ${e.subtitle}`);
   }
@@ -367,11 +389,28 @@ async function seed() {
   for (let i = 0; i < timelineExperiences.length; i++) {
     const e = timelineExperiences[i];
     const id = crypto.randomUUID();
-    const tags = JSON.stringify(e.tags);
     await em.query(
-      `INSERT INTO experiences (id, title, company, "startDate", "endDate", description, tags, "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, e.title, e.subtitle, e.startDate, e.endDate || null, e.description, tags, i]
+      `INSERT INTO experiences (id, title, company, "startDate", "endDate", description, "order") VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, e.title, e.subtitle, e.startDate, e.endDate || null, e.description, i]
     );
+    for (const tag of e.tags) {
+      await em.query(
+        `INSERT INTO experience_tags ("experienceId", value) VALUES (?, ?)`,
+        [id, tag]
+      );
+    }
+    // One point per experience, derived from its description
+    const pointId = crypto.randomUUID();
+    await em.query(
+      `INSERT INTO experience_points (id, text, "order", "experienceId") VALUES (?, ?, ?, ?)`,
+      [pointId, e.description, 0, id]
+    );
+    for (const skillId of skillIdsFor(e.tags)) {
+      await em.query(
+        `INSERT INTO experience_point_skills ("pointId", "skillId") VALUES (?, ?)`,
+        [pointId, skillId]
+      );
+    }
     experienceIds[e.id] = id;
     console.log(`   ✅ Experience: ${e.title} @ ${e.subtitle}`);
   }
@@ -381,15 +420,13 @@ async function seed() {
   const projectIds: string[] = [];
   for (const mp of MOCK_PROJECTS) {
     const id = crypto.randomUUID();
-    const technologiesJson = JSON.stringify(mp.technologies.map(t => ({ name: t })));
     const catId = categoryByName[mp.category];
     await em.query(
-      `INSERT INTO projects (id, title, description, "longDescription", technologies, status, featured, "imageUrl", "liveUrl", "sourceUrl", "createdAt", "updatedAt", "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO projects (id, title, description, "longDescription", status, featured, "imageUrl", "createdAt", "updatedAt", "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, mp.title, mp.description, mp.longDescription,
-        technologiesJson,
         mp.status, mp.featured ? 1 : 0,
-        mp.imageUrl || null, mp.liveUrl || null, mp.sourceUrl || null,
+        mp.imageUrl || null,
         mp.createdAt, mp.updatedAt, projectIds.length,
       ]
     );
@@ -399,24 +436,46 @@ async function seed() {
         [id, catId]
       );
     }
-    // Link project to skills by matching technology names
-    for (const techName of mp.technologies) {
-      const match = MOCK_SKILLS.find(
-        s => s.name.toLowerCase() === techName.toLowerCase()
+    for (const tech of mp.technologies) {
+      await em.query(
+        `INSERT INTO project_technologies ("projectId", name) VALUES (?, ?)`,
+        [id, tech]
       );
-      if (match && skillIds[match.id]) {
-        await em.query(
-          `INSERT INTO project_skills ("projectsId", "skillsId") VALUES (?, ?)`,
-          [id, skillIds[match.id]]
-        );
-      }
     }
+    // Project links: demo/live link first (as the primary), then source link
+    let linkOrder = 0;
+    const demoUrl = mp.liveUrl || mp.sourceUrl;
+    if (demoUrl) {
+      await em.query(
+        `INSERT INTO links (id, label, url, type, "order", "projectId") VALUES (?, ?, ?, ?, ?, ?)`,
+        [crypto.randomUUID(), 'Demo', demoUrl, 'demo', linkOrder++, id]
+      );
+    }
+    if (mp.sourceUrl && mp.sourceUrl !== mp.liveUrl) {
+      await em.query(
+        `INSERT INTO links (id, label, url, type, "order", "projectId") VALUES (?, ?, ?, ?, ?, ?)`,
+        [crypto.randomUUID(), 'Source', mp.sourceUrl, 'source', linkOrder++, id]
+      );
+    }
+    // Project points derived from the timeline entries, with skill links
+    const techSkillIds = skillIdsFor(mp.technologies);
     for (let ti = 0; ti < mp.timeline.length; ti++) {
       const t = mp.timeline[ti];
       await em.query(
         `INSERT INTO project_timeline_entries (id, date, title, description, status, "imageUrl", "projectId", "order") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [crypto.randomUUID(), t.date, t.title, t.description, t.status, t.imageUrl || null, id, ti]
       );
+      const pointId = crypto.randomUUID();
+      await em.query(
+        `INSERT INTO project_points (id, text, "order", "projectId") VALUES (?, ?, ?, ?)`,
+        [pointId, t.description, ti, id]
+      );
+      for (const skillId of techSkillIds) {
+        await em.query(
+          `INSERT INTO project_point_skills ("pointId", "skillId") VALUES (?, ?)`,
+          [pointId, skillId]
+        );
+      }
     }
     projectIds.push(id);
     console.log(`   ✅ Project: ${mp.title}`);
@@ -439,22 +498,56 @@ async function seed() {
     ]
   );
   for (let i = 0; i < allSkillIds.length; i++) {
-    await em.query(`INSERT INTO cv_skills (id, "cvId", "skillId", "order") VALUES (?, ?, ?, ?)`, [crypto.randomUUID(), cvId, allSkillIds[i], i]);
+    await em.query(
+      `INSERT INTO cv_skills ("cvId", "skillId", "order") VALUES (?, ?, ?)`,
+      [cvId, allSkillIds[i], i]
+    );
   }
   for (const lid of languageIds) {
-    await em.query(`INSERT INTO cv_languages ("cvsId", "languagesId") VALUES (?, ?)`, [cvId, lid]);
+    await em.query(
+      `INSERT INTO cv_languages ("cvsId", "languagesId") VALUES (?, ?)`,
+      [cvId, lid]
+    );
   }
   for (let i = 0; i < passionIds.length; i++) {
-    await em.query(`INSERT INTO cv_passions (id, "cvId", "passionId", "order") VALUES (?, ?, ?, ?)`, [crypto.randomUUID(), cvId, passionIds[i], i]);
+    await em.query(
+      `INSERT INTO cv_passions ("cvId", "passionId", "order") VALUES (?, ?, ?)`,
+      [cvId, passionIds[i], i]
+    );
   }
   for (const eid of allExperienceIds) {
-    await em.query(`INSERT INTO cv_experiences ("cvsId", "experiencesId") VALUES (?, ?)`, [cvId, eid]);
+    await em.query(
+      `INSERT INTO cv_experiences ("cvsId", "experiencesId") VALUES (?, ?)`,
+      [cvId, eid]
+    );
   }
   for (let i = 0; i < projectIds.length; i++) {
-    await em.query(`INSERT INTO cv_projects (id, "cvId", "projectId", "order") VALUES (?, ?, ?, ?)`, [crypto.randomUUID(), cvId, projectIds[i], i]);
+    await em.query(
+      `INSERT INTO cv_projects ("cvId", "projectId", "order") VALUES (?, ?, ?)`,
+      [cvId, projectIds[i], i]
+    );
+  }
+  // Select the first two points of every project so point bullets render on
+  // the seeded CV (keeps a representative subset per project).
+  const selectedPointIds: string[] = [];
+  for (const projectId of projectIds) {
+    const rows: { id: string }[] = await em.query(
+      `SELECT id FROM project_points WHERE "projectId" = ? ORDER BY "order" LIMIT 2`,
+      [projectId]
+    );
+    for (const row of rows) selectedPointIds.push(row.id);
+  }
+  for (const projectPointId of selectedPointIds) {
+    await em.query(
+      `INSERT INTO cv_project_points ("cvId", "projectPointId") VALUES (?, ?)`,
+      [cvId, projectPointId]
+    );
   }
   for (const eid of allEducationIds) {
-    await em.query(`INSERT INTO cv_education ("cvsId", "educationId") VALUES (?, ?)`, [cvId, eid]);
+    await em.query(
+      `INSERT INTO cv_education ("cvsId", "educationId") VALUES (?, ?)`,
+      [cvId, eid]
+    );
   }
   console.log('   ✅ CV: Loan MATA (default)\n');
 

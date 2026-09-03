@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { Public } from '../../common/decorators/public.decorator';
 import { ExportCvDto } from './dto/export-cv.dto';
 import { PdfService } from './pdf.service';
 import { RenderService } from './render.service';
@@ -25,14 +24,12 @@ export class CvRenderController {
     private readonly pdf: PdfService,
   ) {}
 
-  @Public()
   @Get('styles')
   @ApiOperation({ summary: 'List available CV render styles' })
   listStyles() {
     return this.styles.list();
   }
 
-  @Public()
   @Get(':id/render')
   @ApiOperation({ summary: 'Render a CV as a standalone HTML document' })
   @ApiProduces('text/html')
@@ -54,7 +51,6 @@ export class CvRenderController {
     res.send(html);
   }
 
-  @Public()
   @Post(':id/export')
   @ApiOperation({ summary: 'Export a CV as a PDF attachment' })
   @ApiProduces('application/pdf')

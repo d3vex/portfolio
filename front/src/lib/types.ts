@@ -1,13 +1,27 @@
+export interface ProjectTechnology {
+  name: string
+  icon?: string
+}
+
+export interface ProjectLink {
+  id: string
+  label: string
+  url: string
+  icon?: string
+  type?: string
+  order?: number
+}
+
 export interface Project {
   id: string
   title: string
   description: string
   longDescription: string
   category: 'dev' | 'infra' | 'sysadmin'
-  technologies: string[]
+  categories: string[]
+  technologies: ProjectTechnology[]
   imageUrl: string
-  liveUrl?: string
-  sourceUrl?: string
+  links: ProjectLink[]
   status: 'completed' | 'testing' | 'in-progress' | 'planned'
   featured: boolean
   timeline: TimelineEntry[]
@@ -105,6 +119,7 @@ export interface Cv {
   isDefault: boolean
   style: CvStyleId
   projectBullets?: Record<string, number[]>
+  cvProjectPointIds?: string[]
   skills: unknown[]
   projects: unknown[]
   passions: unknown[]
@@ -112,4 +127,120 @@ export interface Cv {
   experiences: unknown[]
   education: unknown[]
   contacts: unknown[]
+}
+
+export type AiSpecialization = 'auto' | 'webdev' | 'appdev' | 'devops' | 'itsupport'
+export type AiStyleId = 'auto' | CvStyleId
+export type AiAboutLength = 'short' | 'medium' | 'long'
+export type AiTone = 'professional' | 'enthusiastic' | 'technical'
+
+export interface AiStatus {
+  available: boolean
+  model: string
+  baseUrl: string
+  models: string[]
+  error?: string | null
+}
+
+export interface AiGenerationOptions {
+  specialization?: AiSpecialization
+  style?: AiStyleId
+  aboutLength?: AiAboutLength
+  maxExperiences?: number
+  maxProjects?: number
+  includeSoftSkills?: boolean
+  includeLanguages?: boolean
+  tone?: AiTone
+  allowSkillSuggestions?: boolean
+  allowBulletSuggestions?: boolean
+  customInstructions?: string
+}
+
+export interface AiSuggestedSkill {
+  id: string
+  name: string
+  description: string
+  cvCategory: 'hard' | 'soft'
+  categoryName: string
+  level: number
+  rationale: string
+}
+
+export interface AiSuggestedBullet {
+  id: string
+  entityType: 'project' | 'experience'
+  entityId: string
+  text: string
+  skillIds: string[]
+  rationale: string
+}
+
+export interface AiGeneratedCv {
+  name: string
+  candidateName: string | null
+  specialization: string
+  titleOverride: string
+  aboutText: string
+  availability: string | null
+  style: CvStyleId
+  pictureId?: string | null
+  skillIds: string[]
+  experienceIds: string[]
+  projectIds: string[]
+  cvProjectPointIds: string[]
+  educationIds: string[]
+  languageIds: string[]
+  passionIds: string[]
+}
+
+export interface AiCvGenerationResult {
+  cv: AiGeneratedCv
+  suggestions: {
+    skills: AiSuggestedSkill[]
+    bullets: AiSuggestedBullet[]
+  }
+  justification: string
+}
+
+export interface AiApplySkillInput {
+  name: string
+  description?: string
+  cvCategory: 'hard' | 'soft'
+  categoryName: string
+  level: number
+  suggestionId?: string
+}
+
+export interface AiApplyBulletInput {
+  entityType: 'project' | 'experience'
+  entityId: string
+  text: string
+  skillIds: string[]
+  suggestionId?: string
+}
+
+export interface AiApplyPayload {
+  skills?: AiApplySkillInput[]
+  bullets?: AiApplyBulletInput[]
+}
+
+export interface AiAppliedSkill {
+  suggestionId: string | null
+  name: string
+  id: string
+  categoryId: string | null
+}
+
+export interface AiAppliedBullet {
+  suggestionId: string | null
+  entityType: 'project' | 'experience'
+  entityId: string
+  pointId: string
+  order: number
+  index: number
+}
+
+export interface AiApplyResponse {
+  skills: AiAppliedSkill[]
+  bullets: AiAppliedBullet[]
 }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useCvStore } from '@/stores/cv'
 import * as api from '@/lib/api/cv'
 import ImageGallery from '@/components/admin/ImageGallery.vue'
 import OrderedPicker from '@/components/cv/OrderedPicker.vue'
@@ -9,8 +8,6 @@ import StylePicker from '@/components/cv/StylePicker.vue'
 
 const router = useRouter()
 const route = useRoute()
-const store = useCvStore()
-
 const isEdit = !!route.params.id
 const saving = ref(false)
 const saveError = ref('')
@@ -41,7 +38,6 @@ const experiences = ref<any[]>([])
 const projects = ref<any[]>([])
 const education = ref<any[]>([])
 const contacts = ref<any[]>([])
-const allImages = ref<any[]>([])
 const showImageGallery = ref(false)
 
 const step = ref(1)
@@ -149,14 +145,39 @@ function previewProjBullets(proj: any): any[] {
   return (proj.projectPoints || []).filter((_: any, i: number) => sel.includes(i))
 }
 
+function pointSkillNames(point: any): string[] {
+  const skillLinks = point?.skillLinks || point?.skills || []
+  return skillLinks
+    .map((l: any) => l.skill?.name ?? l.name)
+    .filter((n: string) => !!n)
+}
+
+function bulletsToPointIds(): string[] {
+  const ids: string[] = []
+  for (const [projectId, indices] of Object.entries(form.value.projectBullets || {})) {
+    const proj = projects.value.find((p: any) => p.id === projectId)
+    const points = ((proj?.projectPoints || []) as any[]).sort((a: any, b: any) => a.order - b.order)
+    for (const i of indices || []) {
+      const point = points[Number(i)]
+      if (point?.id) ids.push(point.id)
+    }
+  }
+  return ids
+}
+
 async function save() {
   saving.value = true
   saveError.value = ''
   try {
+    const { projectBullets, ...rest } = form.value
+    const payload = {
+      ...rest,
+      cvProjectPointIds: bulletsToPointIds(),
+    }
     if (isEdit) {
-      await api.updateCv(route.params.id as string, form.value)
+      await api.updateCv(route.params.id as string, payload)
     } else {
-      await api.createCv(form.value)
+      await api.createCv(payload)
     }
     router.push('/admin/cvs')
   } catch (e: any) {
@@ -526,7 +547,7 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
                   <li v-for="d in exp.experiencePoints" :key="d.text || d" style="font-size:13px;font-weight:500;color:#3F3F46;padding-left:14px;position:relative;margin-bottom:2px">
                     <span style="position:absolute;left:0;color:#2563EB;font-weight:600">&rarr;</span>
                     <span>{{ d.text || d }}</span>
-                    <span v-if="d.skillIds?.length" style="font-size:11px;color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
+                    <span v-if="pointSkillNames(d).length" style="font-size:11px;color:#2563EB">— {{ pointSkillNames(d).join(', ') }}</span>
                   </li>
                 </ul>
               </div>
@@ -549,7 +570,7 @@ const steps = ['Info', 'Skills', 'Languages & Passions', 'Experience & Projects'
                   <li v-for="d in previewProjBullets(proj)" :key="d.text || d" style="font-size:13px;font-weight:500;color:#3F3F46;padding-left:14px;position:relative;margin-bottom:2px">
                     <span style="position:absolute;left:0;color:#2563EB;font-weight:600">&rarr;</span>
                     <span>{{ d.text || d }}</span>
-                    <span v-if="d.skillIds?.length" style="font-size:11px;color:#2563EB">— {{ d.skillIds.map((sid: string) => skills.find(s => s.id === sid)?.name).filter(Boolean).join(', ') }}</span>
+                    <span v-if="pointSkillNames(d).length" style="font-size:11px;color:#2563EB">— {{ pointSkillNames(d).join(', ') }}</span>
                   </li>
                 </ul>
                 <div v-if="proj.technologies?.length" class="flex flex-wrap gap-1 mt-1">

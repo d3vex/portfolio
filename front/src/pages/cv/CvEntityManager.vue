@@ -118,8 +118,6 @@ const entityConfig: Record<string, EntityConfig> = {
       { key: 'links', label: 'Links', type: 'links' },
       { key: 'timeline', label: 'Progress Timeline', type: 'timeline' },
       { key: 'imageId', label: 'Image', type: 'image' },
-      { key: 'liveUrl', label: 'Live URL', type: 'text' },
-      { key: 'sourceUrl', label: 'Source URL', type: 'text' },
       { key: 'educationId', label: 'Linked Education', type: 'education-select' },
       { key: 'order', label: 'Order', type: 'number' },
     ],
@@ -221,10 +219,6 @@ function addSelectedCategory() {
   selectedCategoryId.value = ''
 }
 
-function bullets() {
-  return form.value[bulletFieldKey.value] || []
-}
-
 function addBullet() {
   if (!newBulletText.value.trim()) return
   if (!form.value[bulletFieldKey.value]) form.value[bulletFieldKey.value] = []
@@ -272,29 +266,6 @@ function removeTech(idx: number) {
   form.value.technologies?.splice(idx, 1)
 }
 
-const editingTech = ref<{ index: number; name: string; icon: string } | null>(null)
-
-function startEditTech(idx: number) {
-  const t = form.value.technologies?.[idx]
-  if (!t) return
-  editingTech.value = { index: idx, name: t.name, icon: t.icon || '' }
-}
-
-function saveEditTech() {
-  if (!editingTech.value || !editingTech.value.name.trim()) return
-  if (form.value.technologies) {
-    form.value.technologies[editingTech.value.index] = {
-      name: editingTech.value.name.trim(),
-      icon: editingTech.value.icon || undefined,
-    }
-  }
-  editingTech.value = null
-}
-
-function cancelEditTech() {
-  editingTech.value = null
-}
-
 function getMaxOrder(): number {
   if (!store.value) return 0
   const items = (store.value as any).items.value
@@ -309,7 +280,7 @@ function formatDateForInput(dateStr: string): string {
   return dateStr
 }
 
-onMounted(async () => {
+async function loadData() {
   try {
     categories.value = await api.getEntity('categories')
     allSkills.value = await api.getEntity('skills')
@@ -321,21 +292,11 @@ onMounted(async () => {
   if (store.value) {
     await (store.value as any).fetchAll()
   }
-})
+}
 
-watch(entityKey, async () => {
-  try {
-    categories.value = await api.getEntity('categories')
-    allSkills.value = await api.getEntity('skills')
-  } catch (_) {}
-  if (entityKey.value === 'projects') {
-    await educationStore.fetchAll()
-    educationList.value = educationStore.items.value
-  }
-  if (store.value) {
-    await (store.value as any).fetchAll()
-  }
-})
+onMounted(loadData)
+
+watch(entityKey, loadData)
 
 function openNew() {
   form.value = { order: getMaxOrder() + 1 }
@@ -349,13 +310,19 @@ function openEdit(item: any) {
     if (field.type === 'month' && item[field.key]) {
       f[field.key] = formatDateForInput(item[field.key])
     } else if (field.type === 'tags' && Array.isArray(item[field.key])) {
-      f[field.key] = [...item[field.key]]
+      f[field.key] = item[field.key].map((t: any) => (typeof t === 'string' ? t : t.value))
     } else if (field.type === 'bullet-list' && Array.isArray(item[field.key])) {
-      f[field.key] = item[field.key].map((b: any) => ({ text: b.text || b, skillIds: b.skillIds || [] }))
+      f[field.key] = item[field.key].map((b: any) => ({
+        text: b.text || b,
+        skillIds: (b.skillLinks || []).map((l: any) => l.skillId),
+      }))
     } else if (field.type === 'tech-list' && Array.isArray(item[field.key])) {
       f[field.key] = item[field.key].map((t: any) => ({ name: t.name || t, icon: t.icon || '' }))
-    } else if (field.type === 'category-multi' && Array.isArray(item[field.key])) {
-      f[field.key] = [...item[field.key]]
+    } else if (field.type === 'category-multi') {
+      const raw = item.categories ?? item[field.key]
+      f[field.key] = Array.isArray(raw)
+        ? raw.map((c: any) => (typeof c === 'string' ? c : c?.id)).filter((x: any) => x)
+        : []
     } else if (field.key === 'featured' || field.key === 'isPrivate') {
       f[field.key] = item[field.key] ? 'true' : 'false'
     } else {
@@ -374,13 +341,7 @@ async function saveItem() {
     for (const field of config.value.fields) {
       if (field.type === 'month' && form.value[field.key]) {
         data[field.key] = form.value[field.key]
-      } else if (field.type === 'tags') {
-        data[field.key] = Array.isArray(form.value[field.key]) ? form.value[field.key] : []
-      } else if (field.type === 'bullet-list') {
-        data[field.key] = Array.isArray(form.value[field.key]) ? form.value[field.key] : []
-      } else if (field.type === 'tech-list') {
-        data[field.key] = Array.isArray(form.value[field.key]) ? form.value[field.key] : []
-      } else if (field.type === 'category-multi') {
+      } else if (field.type === 'tags' || field.type === 'bullet-list' || field.type === 'tech-list' || field.type === 'category-multi') {
         data[field.key] = Array.isArray(form.value[field.key]) ? form.value[field.key] : []
       } else if (field.key === 'featured' || field.key === 'isPrivate') {
         data[field.key] = form.value[field.key] === 'true'
@@ -446,7 +407,6 @@ function toggleCategory(catId: string) {
       </div>
     </div>
 
-    <!-- Form Modal -->
     <div v-if="showForm" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" @click.self="showForm = false">
       <div class="bg-surface dark:bg-surface-900 rounded-2xl border border-gray-200 dark:border-surface-700 p-6 w-full max-w-xl max-h-[85vh] overflow-y-auto shadow-2xl">
         <div class="flex items-center justify-between mb-4">
@@ -496,14 +456,12 @@ function toggleCategory(catId: string) {
             <ListEditor v-else-if="field.type === 'tags'" :modelValue="form[field.key] || []"
               @update:modelValue="form[field.key] = $event" :placeholder="'Add ' + field.label.toLowerCase() + '...'" />
 
-            <!-- Category Single Select -->
             <select v-else-if="field.type === 'category-single'" v-model="form.categoryId"
               class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800 outline-none focus:ring-2 focus:ring-accent/50 text-sm">
               <option value="">No category</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
             </select>
 
-            <!-- Category Multi Select -->
             <div v-else-if="field.type === 'category-multi'" class="space-y-1">
               <div class="flex flex-wrap gap-1.5">
                 <span v-for="cid in (form.categoryIds || [])" :key="cid"
@@ -520,7 +478,6 @@ function toggleCategory(catId: string) {
               </select>
             </div>
 
-            <!-- Bullet List (LinkEditor pattern) -->
             <div v-else-if="field.type === 'bullet-list'" class="space-y-2">
               <div v-for="(b, i) in form[field.key] || []" :key="i"
                 class="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800">
@@ -576,7 +533,6 @@ function toggleCategory(catId: string) {
               </div>
             </div>
 
-            <!-- Tech List with Icons (LinkEditor pattern) -->
             <div v-else-if="field.type === 'tech-list'" class="space-y-2">
               <div v-for="(t, i) in form.technologies" :key="i"
                 class="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800">
@@ -639,7 +595,6 @@ function toggleCategory(catId: string) {
           </div>
         </div>
 
-        <!-- Preview -->
         <div v-if="editing || form.name || form.title" class="mt-6 pt-4 border-t border-gray-200 dark:border-surface-700">
           <p class="text-xs font-mono uppercase tracking-wider text-surface-400 mb-2">Preview</p>
           <div class="p-4 rounded-xl border border-gray-200 dark:border-surface-700 bg-white dark:bg-surface-800">
@@ -761,7 +716,7 @@ function toggleCategory(catId: string) {
               <span class="text-xs font-mono">{{ item.status || 'planned' }}</span>
             </div>
             <span class="text-xs font-mono px-2 py-0.5 rounded" style="background-color: var(--color-bg); color: var(--color-text-secondary);">
-              {{ categories.find(c => item.categoryIds?.includes(c.id))?.label || item.categoryIds?.[0] || 'General' }}
+              {{ (item.categories || []).map((c: any) => typeof c === 'string' ? c : (categories.find((x: any) => x.id === c.id)?.label || c.label || c.id)).join(', ') || 'General' }}
             </span>
           </div>
           <h3 class="text-xl font-heading font-bold mb-2 relative z-[1]" style="color: var(--color-text);">{{ item.title }}</h3>
@@ -810,7 +765,7 @@ function toggleCategory(catId: string) {
                   <span class="text-xs font-mono text-surface-400">{{ item[field.key] }}</span>
                 </div>
                 <div v-else-if="field.type === 'tags' && Array.isArray(item[field.key])" class="flex gap-1 flex-wrap">
-                  <span v-for="t in item[field.key].slice(0, 3)" :key="t" class="px-1.5 py-0.5 text-[10px] rounded bg-accent/10 text-accent font-mono">{{ t }}</span>
+                  <span v-for="t in item[field.key].slice(0, 3)" :key="typeof t === 'string' ? t : t.value" class="px-1.5 py-0.5 text-[10px] rounded bg-accent/10 text-accent font-mono">{{ typeof t === 'string' ? t : t.value }}</span>
                   <span v-if="item[field.key].length > 3" class="text-[10px] text-surface-400">+{{ item[field.key].length - 3 }}</span>
                 </div>
                 <div v-else-if="field.type === 'category-single'" class="flex items-center gap-1">
@@ -851,7 +806,7 @@ function toggleCategory(catId: string) {
                     <span class="text-xs font-mono text-surface-400">{{ item[field.key] }}</span>
                   </div>
                   <div v-else-if="field.type === 'tags' && Array.isArray(item[field.key])" class="flex gap-1 flex-wrap">
-                    <span v-for="t in item[field.key].slice(0, 3)" :key="t" class="px-1.5 py-0.5 text-[10px] rounded bg-accent/10 text-accent font-mono">{{ t }}</span>
+                    <span v-for="t in item[field.key].slice(0, 3)" :key="typeof t === 'string' ? t : t.value" class="px-1.5 py-0.5 text-[10px] rounded bg-accent/10 text-accent font-mono">{{ typeof t === 'string' ? t : t.value }}</span>
                     <span v-if="item[field.key].length > 3" class="text-[10px] text-surface-400">+{{ item[field.key].length - 3 }}</span>
                   </div>
                   <div v-else-if="field.type === 'category-single'" class="flex items-center gap-1">

@@ -105,7 +105,7 @@ function filterCount(key: string) {
               <div class="projects_page__status-dot" :class="statusDot(project.status)" />
               <span class="text-xs font-mono">{{ project.status }}</span>
             </div>
-            <span class="projects_page__card-category">{{ project.category }}</span>
+            <span class="projects_page__card-category">{{ project.categories.join(', ') || project.category }}</span>
           </div>
 
           <h3 class="projects_page__card-title">{{ project.title }}</h3>
@@ -114,10 +114,10 @@ function filterCount(key: string) {
           <div class="projects_page__card-techs">
             <span
               v-for="tech in project.technologies.slice(0, 4)"
-              :key="tech"
+              :key="tech.name || tech"
               class="projects_page__card-tech"
             >
-              {{ tech }}
+              {{ tech.name || tech }}
             </span>
             <span v-if="project.technologies.length > 4" class="projects_page__card-tech">
               +{{ project.technologies.length - 4 }}
@@ -166,8 +166,6 @@ function filterCount(key: string) {
     color: var(--color-text-secondary);
   }
 
-  // ── Filters ──────────────────────────
-
   &__filters {
     @apply flex items-center justify-center gap-2 mb-10 flex-wrap;
   }
@@ -199,8 +197,6 @@ function filterCount(key: string) {
     }
   }
 
-  // ── Loading / Empty ───────────────────
-
   &__loading {
     @apply grid grid-cols-1 md:grid-cols-2 gap-6;
   }
@@ -216,13 +212,9 @@ function filterCount(key: string) {
     color: var(--color-text-secondary);
   }
 
-  // ── Grid ──────────────────────────────
-
   &__grid {
     @apply grid grid-cols-1 md:grid-cols-2 gap-6;
   }
-
-  // ── Card ──────────────────────────────
 
   &__card {
     @apply relative p-6 rounded-xl border overflow-hidden cursor-pointer;
@@ -277,8 +269,6 @@ function filterCount(key: string) {
     @apply flex justify-end relative z-[1];
   }
 
-  // ── Status dot ────────────────────────
-
   &__status-dot {
     @apply w-2 h-2 rounded-full;
 
@@ -301,8 +291,6 @@ function filterCount(key: string) {
     }
   }
 
-  // ── Hover glow ────────────────────────
-
   &__glow {
     @apply absolute inset-0 pointer-events-none rounded-xl;
     transition: opacity 0.35s ease;
@@ -314,8 +302,6 @@ function filterCount(key: string) {
     opacity: 1;
   }
 }
-
-// ── Animations ──────────────────────────
 
 @keyframes card-enter {
   from {

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { DataSource, QueryRunner } from 'typeorm';
+import { DataSource } from 'typeorm';
 import * as crypto from 'crypto';
 
 const OLD_SQLITE_PATH = 'data/cvmanager.sqlite';
@@ -64,7 +64,7 @@ async function migrateOld() {
   await em.query('SET FOREIGN_KEY_CHECKS = 0');
   const allTables = [
     'project_timeline_entries', 'links', 'project_categories', 'project_skills',
-    'experience_skills', 'cv_education', 'cv_projects', 'cv_experiences',
+    'cv_education', 'cv_projects', 'cv_experiences',
     'cv_passions', 'cv_languages', 'cv_skills', 'cvs',
     'projects', 'experiences', 'education', 'skills', 'languages',
     'passions', 'contacts', 'profiles', 'categories', 'images', 'users',
@@ -73,7 +73,7 @@ async function migrateOld() {
     await em.query(`DELETE FROM ${q(t)}`);
   }
 
-  // ── 1. Copy simple tables directly ─────────────────────────────────
+  // 1. Copy simple tables directly
   console.log('\nCopying core tables...');
 
   const excludeCols: Record<string, string[]> = {
@@ -93,8 +93,7 @@ async function migrateOld() {
       const vals = cols.map(c => {
         const v = row[c];
         if (v instanceof Buffer) return v;
-        if (v === null || v === undefined) return null;
-        if (typeof v === 'string' && v === '') return null;
+        if (v == null || v === '') return null;
         return v;
       });
       const ph = cols.map(() => '?').join(', ');
@@ -106,7 +105,7 @@ async function migrateOld() {
     console.log(`  ${table}: ${rows.length} rows`);
   }
 
-  // ── 2. Projects (core columns only, relations handled next) ─────────
+  // 2. Projects (core columns only, relations handled next)
   console.log('\nCopying projects...');
   const projectRows = oldDb.prepare('SELECT * FROM projects').all() as OldProject[];
 
@@ -134,7 +133,7 @@ async function migrateOld() {
   }
   console.log(`  projects: ${projectRows.length} rows`);
 
-  // ── 3. CVs ──────────────────────────────────────────────────────────
+  // 3. CVs
   console.log('\nCopying CVs...');
   const cvRows = oldDb.prepare('SELECT * FROM cvs').all() as OldCv[];
 
@@ -155,7 +154,7 @@ async function migrateOld() {
   }
   console.log(`  cvs: ${cvRows.length} rows`);
 
-  // ── 4. Project → category join table ──────────────────────────────────
+  // 4. Project → category join table
   console.log('\nPopulating project_categories...');
   let count = 0;
   for (const p of projectRows) {
@@ -168,24 +167,7 @@ async function migrateOld() {
       count++;
     }
   }
-  console.log(`  project_categories: ${count} rows`);
-
-  // ── 5. Project → skills join table ──────────────────────────────────
-  console.log('\nPopulating project_skills...');
-  count = 0;
-  for (const p of projectRows) {
-    const skillIds = parseJson<string>(p.skillIds);
-    for (const sid of skillIds) {
-      await em.query(
-        `INSERT INTO ${q('project_skills')} (${q('projectsId')}, ${q('skillsId')}) VALUES (?, ?)`,
-        [p.id, sid]
-      );
-      count++;
-    }
-  }
-  console.log(`  project_skills: ${count} rows`);
-
-  // ── 6. Project → timeline entries ───────────────────────────────────
+  // 5. Project → timeline entries
   console.log('\nPopulating project_timeline_entries...');
   count = 0;
   for (const p of projectRows) {
@@ -203,7 +185,7 @@ async function migrateOld() {
   }
   console.log(`  project_timeline_entries: ${count} rows`);
 
-  // ── 7. Project → links ─────────────────────────────────────────────
+  // 6. Project → links
   console.log('\nPopulating links...');
   count = 0;
   for (const p of projectRows) {
@@ -221,7 +203,7 @@ async function migrateOld() {
   }
   console.log(`  links: ${count} rows`);
 
-  // ── 8. CV → * join tables ──────────────────────────────────────────
+  // 7. CV → * join tables
   console.log('\nPopulating CV join tables...');
 
   for (const cv of cvRows) {

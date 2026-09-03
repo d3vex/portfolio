@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Project } from './project.entity';
+import { ProjectPointSkill } from './project-point-skill.entity';
 
 @Entity('project_points')
 export class ProjectPoint {
@@ -12,8 +13,8 @@ export class ProjectPoint {
   @Column({ type: 'int', default: 0 })
   order: number;
 
-  @Column({ type: 'json', nullable: true })
-  skillIds: string[];
+  @OneToMany(() => ProjectPointSkill, (link) => link.point, { cascade: true, orphanedRowAction: 'delete' })
+  skillLinks: ProjectPointSkill[];
 
   @Column()
   projectId: string;

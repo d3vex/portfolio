@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Category } from '../../category/entities/category.entity';
+import { SkillKeyword } from './skill-keyword.entity';
 
 @Entity('skills')
 export class Skill {
@@ -25,8 +26,8 @@ export class Skill {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'json', nullable: true })
-  keywords: string[];
+  @OneToMany(() => SkillKeyword, (keyword) => keyword.skill, { cascade: true, orphanedRowAction: 'delete' })
+  keywords: SkillKeyword[];
 
   @Column({ type: 'int', default: 0 })
   level: number;

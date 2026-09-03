@@ -62,7 +62,6 @@ function formatDate(date: string): string {
         <p class="timeline_page__subtitle">{{ t('timeline.subtitle') }}</p>
       </div>
 
-      <!-- Year filter -->
       <div v-if="years.length > 1" class="timeline_page__filter">
         <button
           class="timeline_page__filter-btn"
@@ -194,13 +193,9 @@ function formatDate(date: string): string {
     border: 1px solid var(--color-border);
   }
 
-  // ── List ─────────────────────────────
-
   &__list {
     @apply relative flex flex-col;
   }
-
-  // ── Item (row) ────────────────────────
 
   &__item {
     @apply relative flex items-start gap-6 pb-14 last:pb-0;
@@ -221,8 +216,6 @@ function formatDate(date: string): string {
     }
   }
 
-  // ── Icon ──────────────────────────────
-
   &__item-icon {
     @apply w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 relative z-10;
     backdrop-filter: blur(8px);
@@ -237,8 +230,6 @@ function formatDate(date: string): string {
     @apply bg-green-500/20 text-green-500;
     box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
   }
-
-  // ── Content card ──────────────────────
 
   &__item-content {
     @apply flex-1 min-w-0 p-5 rounded-xl border transition-all duration-200;
@@ -297,8 +288,6 @@ function formatDate(date: string): string {
     color: var(--color-text-secondary);
   }
 
-  // ── Sub-projects ──────────────────────
-
   &__subprojects {
     @apply mt-4 pt-4 border-t;
     border-color: var(--color-border);
@@ -349,8 +338,6 @@ function formatDate(date: string): string {
     opacity: 0.85;
     color: white;
   }
-
-  // ── Filter ──────────────────────
 
   &__filter {
     @apply flex flex-wrap gap-2 mb-8 justify-center;

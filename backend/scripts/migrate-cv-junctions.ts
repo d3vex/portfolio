@@ -17,20 +17,16 @@ const JUNCTIONS: JunctionSpec[] = [
   { table: 'cv_passions', childTable: 'passions', childColumn: 'passionId', oldChildColumn: 'passionsId' },
 ];
 
-async function tableColumns(cn: mysql.Connection, table: string): Promise<string[] | null> {
-  try {
-    const [rows] = await cn.execute(`SHOW COLUMNS FROM ${q(table)}`);
-    return (rows as mysql.RowDataPacket[]).map((r) => String(r.Field));
-  } catch {
-    return null;
-  }
-}
-
 async function convertJunction(cn: mysql.Connection, spec: JunctionSpec): Promise<void> {
   const { table, childTable, childColumn, oldChildColumn } = spec;
   const newTable = `${table}_new`;
 
-  const columns = await tableColumns(cn, table);
+  let columns: string[] | null = null;
+  try {
+    const [rows] = await cn.execute(`SHOW COLUMNS FROM ${q(table)}`);
+    columns = (rows as mysql.RowDataPacket[]).map((r) => String(r.Field));
+  } catch {
+  }
   if (!columns) {
     console.log(`  ${table}: table does not exist, skipping`);
     return;

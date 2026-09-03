@@ -1,11 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { Category } from '../../category/entities/category.entity';
-import { Skill } from '../../skill/entities/skill.entity';
 import { Education } from '../../education/entities/education.entity';
 import { Image } from '../../images/entities/image.entity';
 import { Link } from './link.entity';
 import { ProjectTimelineEntry } from './project-timeline-entry.entity';
 import { ProjectPoint } from './project-point.entity';
+import { ProjectTechnology } from './project-technology.entity';
 
 export enum ProjectStatus {
   COMPLETED = 'completed',
@@ -26,9 +26,6 @@ export class Project {
   subtitle: string;
 
   @Column({ nullable: true })
-  url: string;
-
-  @Column({ nullable: true })
   startDate: string;
 
   @Column({ nullable: true })
@@ -40,16 +37,12 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   longDescription: string;
 
-  @Column({ type: 'json', nullable: true })
-  technologies: { name: string; icon?: string }[];
+  @OneToMany(() => ProjectTechnology, (tech) => tech.project, { cascade: true, orphanedRowAction: 'delete' })
+  technologies: ProjectTechnology[];
 
   @ManyToMany(() => Category)
   @JoinTable({ name: 'project_categories' })
   categories: Category[];
-
-  @ManyToMany(() => Skill)
-  @JoinTable({ name: 'project_skills' })
-  skills: Skill[];
 
   @Column({ type: 'enum', enum: ProjectStatus, default: ProjectStatus.IN_PROGRESS })
   status: ProjectStatus;
@@ -66,12 +59,6 @@ export class Project {
   @ManyToOne(() => Image)
   @JoinColumn({ name: 'imageId' })
   image: Image;
-
-  @Column({ nullable: true })
-  liveUrl: string;
-
-  @Column({ nullable: true })
-  sourceUrl: string;
 
   @OneToMany(() => Link, link => link.project, { cascade: true, orphanedRowAction: 'delete' })
   links: Link[];

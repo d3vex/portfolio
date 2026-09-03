@@ -21,14 +21,17 @@ export class ContactController {
     return this.service.findAll(user != null);
   }
 
-  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get contact by id' })
   findOne(@Param('id') id: string) { return this.service.findOne(id); }
 
+  @Public()
+  @UseGuards(OptionalAuthGuard)
   @Post()
-  @ApiOperation({ summary: 'Create contact' })
-  create(@Body() dto: CreateContactDto) { return this.service.create(dto); }
+  @ApiOperation({ summary: 'Create contact (public inquiries are sanitized)' })
+  create(@Body() dto: CreateContactDto, @CurrentUserOptionnal() user: User | null) {
+    return this.service.create(dto, user != null);
+  }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update contact' })

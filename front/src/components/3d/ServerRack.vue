@@ -135,7 +135,6 @@ function startRestart(srv: ServerSlot) {
   srv.progress = 0
   const duration = 5000
   const start = performance.now()
-  let lastSpawn = 0
 
   function frame(now: number) {
     const t = Math.min((now - start) / duration, 1)
@@ -149,11 +148,6 @@ function startRestart(srv: ServerSlot) {
       srv.blink = Math.sin(t * 12 + 3) > 0.15
     } else {
       srv.blink = Math.sin(t * 28 + 7) > 0.65
-    }
-
-    // Particles during early restart
-    if (t < 0.2 && now - lastSpawn > 100) {
-      lastSpawn = now
     }
 
     if (t < 1) {
@@ -174,7 +168,7 @@ function updateParticles() {
   if (particles.value.length === 0) return
 
   const dt = 0.016
-  const toRemove: number[] = []
+  const toRemove = new Set<number>()
 
   for (const p of particles.value) {
     p.life += dt
@@ -182,12 +176,12 @@ function updateParticles() {
     p.y += Math.sin(p.angle) * p.speed * dt
     p.speed *= 0.97
     if (p.life >= p.maxLife) {
-      toRemove.push(p.id)
+      toRemove.add(p.id)
     }
   }
 
-  if (toRemove.length > 0) {
-    particles.value = particles.value.filter(p => !toRemove.includes(p.id))
+  if (toRemove.size > 0) {
+    particles.value = particles.value.filter(p => !toRemove.has(p.id))
   }
 }
 
@@ -335,7 +329,6 @@ function slotEl(srv: ServerSlot): string {
       </div>
     </div>
 
-    <!-- Particles layer -->
     <div class="particles-layer">
       <div
         v-for="p in particles"
@@ -364,7 +357,6 @@ function slotEl(srv: ServerSlot): string {
   position: relative;
 }
 
-/* Header */
 .rack-header {
   display: flex;
   align-items: center;
@@ -400,7 +392,6 @@ function slotEl(srv: ServerSlot): string {
   letter-spacing: 0.1em;
 }
 
-/* Body */
 .rack-body {
   padding: 6px 10px;
   display: flex;
@@ -409,7 +400,6 @@ function slotEl(srv: ServerSlot): string {
   position: relative;
 }
 
-/* Slot */
 .slot {
   display: flex;
   align-items: stretch;
@@ -431,7 +421,6 @@ function slotEl(srv: ServerSlot): string {
   background: rgba(234, 179, 8, 0.04);
 }
 
-/* Ears */
 .ear {
   width: 8px;
   background: linear-gradient(180deg, #25252c, #1c1c22);
@@ -452,7 +441,6 @@ function slotEl(srv: ServerSlot): string {
   box-shadow: 0 10px 0 #3a3a44;
 }
 
-/* Server */
 .server {
   flex: 1;
   display: flex;
@@ -475,7 +463,6 @@ function slotEl(srv: ServerSlot): string {
   box-shadow: inset 0 0 20px rgba(234, 179, 8, 0.04);
 }
 
-/* Online ring glow */
 .server__online-ring {
   position: absolute;
   inset: -1px;
@@ -485,7 +472,6 @@ function slotEl(srv: ServerSlot): string {
   pointer-events: none;
 }
 
-/* LEDs */
 .server__indicator {
   display: flex;
   gap: 4px;
@@ -512,7 +498,6 @@ function slotEl(srv: ServerSlot): string {
   box-shadow: 0 0 6px rgba(234, 179, 8, 0.5);
 }
 
-/* Label */
 .server__label {
   font-size: 10px;
   font-family: monospace;
@@ -521,7 +506,6 @@ function slotEl(srv: ServerSlot): string {
   min-width: 48px;
 }
 
-/* Activity bars */
 .server__bars {
   display: flex;
   align-items: flex-end;
@@ -542,7 +526,6 @@ function slotEl(srv: ServerSlot): string {
 .server__bar--online:nth-child(2) { animation-delay: 0.15s; }
 .server__bar--online:nth-child(3) { animation-delay: 0.3s; }
 
-/* Traffic dot */
 .server__traffic {
   display: flex;
   align-items: center;
@@ -556,7 +539,6 @@ function slotEl(srv: ServerSlot): string {
   animation: blink 1.5s ease-in-out infinite;
 }
 
-/* Status tag */
 .server__status-tag {
   font-size: 8px;
   font-family: monospace;
@@ -578,7 +560,6 @@ function slotEl(srv: ServerSlot): string {
   border: 1px solid rgba(234, 179, 8, 0.2);
 }
 
-/* Footer */
 .rack-footer {
   padding: 6px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -596,7 +577,6 @@ function slotEl(srv: ServerSlot): string {
   border-radius: 1px;
 }
 
-/* Particles */
 .particles-layer {
   position: absolute;
   inset: 0;

@@ -25,8 +25,14 @@ export class ContactService {
     return entity;
   }
 
-  create(dto: CreateContactDto) {
+  create(dto: CreateContactDto, authenticated = false) {
     const entity = this.repo.create(dto);
+    if (!authenticated) {
+      entity.isPrivate = false;
+      entity.type = dto.type || 'inquiry';
+      entity.order = 0;
+      entity.icon = null;
+    }
     return this.repo.save(entity);
   }
 

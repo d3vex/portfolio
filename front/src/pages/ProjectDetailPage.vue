@@ -56,6 +56,16 @@ function statusLineColor(status: string) {
 function openUrl(url: string) {
   window.open(url, '_blank')
 }
+
+const mainLink = computed(() => {
+  const link = (project.value?.links || []).find((l) => ['demo', 'website', 'live'].includes(l.type!)) || project.value?.links[0]
+  return link || null
+})
+
+const sourceLink = computed(() => {
+  const link = (project.value?.links || []).find((l) => l.type === 'source')
+  return link || null
+})
 </script>
 
 <template>
@@ -75,7 +85,7 @@ function openUrl(url: string) {
       <template v-else-if="project">
         <div class="project_detail__header">
           <div class="project_detail__meta">
-            <span class="project_detail__category">{{ project.category }}</span>
+            <span class="project_detail__category">{{ project.categories.join(', ') || project.category }}</span>
             <span class="project_detail__status" :class="project.status === 'completed' ? 'text-green-500' : project.status === 'testing' ? 'text-blue-500' : project.status === 'in-progress' ? 'text-amber-500' : 'text-zinc-500'">
               {{ project.status }}
             </span>
@@ -85,10 +95,10 @@ function openUrl(url: string) {
         </div>
 
         <div class="project_detail__actions">
-          <AppButton v-if="project.liveUrl" variant="primary" iconRight="mdi:open-in-new" @click="openUrl(project.liveUrl!)">
+          <AppButton v-if="mainLink" variant="primary" iconRight="mdi:open-in-new" @click="openUrl(mainLink.url!)">
             {{ t('projects.live_demo') }}
           </AppButton>
-          <AppButton v-if="project.sourceUrl" variant="outline" iconLeft="mdi:github" @click="openUrl(project.sourceUrl!)">
+          <AppButton v-if="sourceLink" variant="outline" iconLeft="mdi:github" @click="openUrl(sourceLink.url!)">
             {{ t('projects.source_code') }}
           </AppButton>
         </div>
@@ -96,8 +106,8 @@ function openUrl(url: string) {
         <div class="project_detail__techs">
           <h3 class="project_detail__section-title">{{ t('projects.technologies') }}</h3>
           <div class="project_detail__tech-list">
-            <span v-for="tech in project.technologies" :key="tech" class="project_detail__tech">
-              {{ tech }}
+            <span v-for="tech in project.technologies" :key="tech.name" class="project_detail__tech">
+              {{ tech.name || tech }}
             </span>
           </div>
         </div>
@@ -240,8 +250,6 @@ function openUrl(url: string) {
     color: var(--color-text);
   }
 
-  // ── Timeline ───────────────────────────
-
   &__timeline {
     @apply mb-10;
   }
@@ -266,13 +274,9 @@ function openUrl(url: string) {
     color: var(--color-accent);
   }
 
-  // ── Timeline list ──────────────────────
-
   &__timeline-list {
     @apply relative flex flex-col;
   }
-
-  // ── Timeline item (row) ────────────────
 
   &__timeline-item {
     @apply relative flex items-start gap-6 pb-10 last:pb-0;
@@ -292,8 +296,6 @@ function openUrl(url: string) {
       display: none;
     }
   }
-
-  // ── Vertical line + dot ────────────────
 
   &__timeline-line {
     @apply relative flex flex-col items-center;
@@ -333,8 +335,6 @@ function openUrl(url: string) {
     &.text-amber-500 { border-color: var(--color-dot-progress); }
     &.text-zinc-500 { border-color: var(--color-dot-todo); }
   }
-
-  // ── Timeline card ──────────────────────
 
   &__timeline-card {
     @apply flex-1 min-w-0 p-4 rounded-xl border transition-all duration-200;
@@ -376,8 +376,6 @@ function openUrl(url: string) {
     max-height: 200px;
     border: 1px solid var(--color-border);
   }
-
-  // ── Not found ──────────────────────────
 
   &__not-found {
     @apply text-center py-20;

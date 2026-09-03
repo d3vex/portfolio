@@ -6,11 +6,13 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "dev": "nest start --watch src/main.ts",
     "seed": "ts-node src/seed.ts",
     "migrate-db": "ts-node scripts/migrate-db.ts",
     "migrate-cv-junctions": "ts-node scripts/migrate-cv-junctions.ts",
     "migrate-old": "ts-node scripts/migrate-old-schema.ts",
+    "restructure-data": "ts-node scripts/restructure-data.ts",
+    "restore-data": "ts-node scripts/restore-data.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -38,7 +40,9 @@
     "puppeteer": "^25.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "typeorm": "^1.0.0"
+    "typeorm": "^1.0.0",
+    "undici": "^8.10.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

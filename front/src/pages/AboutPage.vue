@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+// #SIZE_OK — Vue SFC with ~300 LOC scoped CSS; script logic extracted to composables
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAsyncData } from '@/composables/useAsyncData'
+import { useTerminalEffect } from '@/composables/useTerminalEffect'
+import { useSkillsAnimation } from '@/composables/useSkillsAnimation'
 import { getSkills } from '@/lib/api/skills'
 import type { Skill } from '@/lib/types'
 
@@ -11,86 +14,10 @@ const { data: skills, loading } = useAsyncData(() => getSkills())
 const hardSkills = computed(() => skills.value?.filter((s: Skill) => s.cvCategory === 'hard') || [])
 const softSkills = computed(() => skills.value?.filter((s: Skill) => s.cvCategory === 'soft') || [])
 
-// ── Terminal state ──────────────────────
-
-const cmd1 = ref('')
-const cmd2 = ref('')
-const cmdOutput = ref('')
-const cursor = ref(true)
-const bioTyped = ref('')
-const bioDone = ref(false)
-
-const infoLines = [
-  'os         Human 2.0 (x86_64)',
-  'host       D3vex-Portfolio',
-  'kernel     12,742h 33m uptime',
-  'shell      /bin/creativity',
-  'terminal   /dev/passion',
-  'location   France (FR)',
-  'role       IT Student & Engineer',
-]
-const infoFullText = infoLines.join('\n')
-
-const bioText = 'French IT student passionate about software development and infrastructure engineering. I thrive at the intersection where code meets hardware \u2014 building everything from Vue frontends to Kubernetes clusters.'
-
-const cmdInfo = 'cat /etc/d3vex-release'
-const cmdBio = 'cat /home/loan_mata/bio.txt'
+const { cmd1, cmd2, cmdOutput, cursor, bioTyped, bioDone } = useTerminalEffect()
+const { widths, initWidths } = useSkillsAnimation(skills)
 
 onMounted(() => {
-  setInterval(() => { cursor.value = !cursor.value }, 530)
-
-  typeText(cmdInfo, (v) => { cmd1.value = v }, () => {
-    typeText(infoFullText, (v) => { cmdOutput.value = v }, () => {})
-  })
-
-  typeText(cmdBio, (v) => { cmd2.value = v }, () => {
-    setTimeout(typeBio, 300)
-  })
-
-  initWidths()
-})
-
-function typeText(text: string, onChar: (v: string) => void, onDone: () => void) {
-  let i = 0
-  const t = setInterval(() => {
-    i++
-    onChar(text.slice(0, i))
-    if (i >= text.length) {
-      clearInterval(t)
-      setTimeout(onDone, 250)
-    }
-  }, 16)
-}
-
-function typeBio() {
-  let i = 0
-  const t = setInterval(() => {
-    bioTyped.value += bioText[i]!
-    i++
-    if (i >= bioText.length) {
-      clearInterval(t)
-      bioDone.value = true
-    }
-  }, 12)
-}
-
-const widths = ref<Record<string, number>>({})
-
-function initWidths() {
-  if (!skills.value) return
-  const init: Record<string, number> = {}
-  skills.value.forEach((s: Skill) => { init[s.id] = 0 })
-  widths.value = init
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const next: Record<string, number> = {}
-      skills.value!.forEach((s: Skill) => { next[s.id] = s.level })
-      widths.value = next
-    })
-  })
-}
-
-watch(skills, () => {
   initWidths()
 })
 </script>
@@ -99,8 +26,7 @@ watch(skills, () => {
   <section class="about_page">
     <div class="about_page__bg" />
 
-    <!-- ── Terminals ── -->
-    <div class="about_page__terminals">
+      <div class="about_page__terminals">
       <div class="about_page__terminal">
         <div class="about_page__terminal-bar">
           <div class="about_page__terminal-dots">
@@ -156,8 +82,7 @@ watch(skills, () => {
       </div>
     </div>
 
-    <!-- ── Skills ── -->
-    <div class="about_page__skills">
+      <div class="about_page__skills">
       <div class="about_page__skills-head">
         <span class="about_page__badge">// skills — inventory</span>
         <h2 class="about_page__skills-title">{{ t('about.skills_title') }}</h2>
@@ -169,7 +94,6 @@ watch(skills, () => {
 
       <template v-else>
         <div class="about_page__columns">
-          <!-- Hard Skills -->
           <div class="about_page__group">
             <div class="about_page__group-header">
               <Icon icon="mdi:code-tags" class="w-5 h-5" />
@@ -203,7 +127,6 @@ watch(skills, () => {
             </TransitionGroup>
           </div>
 
-          <!-- Soft Skills -->
           <div class="about_page__group">
             <div class="about_page__group-header">
               <Icon icon="mdi:account-group" class="w-5 h-5" />
@@ -253,8 +176,6 @@ watch(skills, () => {
       radial-gradient(ellipse at 50% 100%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
   }
 
-  // ── Terminals ────────────────────────
-
   &__terminals {
     @apply max-w-5xl mx-auto mb-24 flex flex-col lg:flex-row gap-4;
   }
@@ -290,8 +211,6 @@ watch(skills, () => {
     @apply p-6 md:p-8 space-y-1;
   }
 
-  // ── Output entries ────────────────────
-
   &__output {
     @apply mb-4;
     animation: fade-up 0.35s ease-out;
@@ -301,8 +220,6 @@ watch(skills, () => {
     @apply font-mono text-sm;
     color: var(--color-text);
   }
-
-  // ── Neofetch lines ────────────────────
 
   &__neofetch-line {
     @apply font-mono text-sm py-1;
@@ -317,8 +234,6 @@ watch(skills, () => {
   &__neofetch-val {
     color: var(--color-text);
   }
-
-  // ── Bio section ──────────────────────
 
   &__bio-section {
     @apply mt-4 rounded-lg border overflow-hidden;
@@ -337,8 +252,6 @@ watch(skills, () => {
     @apply px-4 py-4 text-base leading-relaxed;
     color: var(--color-text);
   }
-
-  // ── Skills ───────────────────────────
 
   &__skills {
     @apply max-w-5xl mx-auto;
@@ -359,13 +272,9 @@ watch(skills, () => {
     color: var(--color-text);
   }
 
-  // ── Columns ──────────────────────────
-
   &__columns {
     @apply grid grid-cols-1 md:grid-cols-2 gap-6;
   }
-
-  // ── Skill group ──────────────────────
 
   &__group {
     @apply min-w-0;
@@ -397,8 +306,6 @@ watch(skills, () => {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
   }
-
-  // ── Blades ───────────────────────────
 
   &__blades {
     @apply space-y-2;
@@ -496,8 +403,6 @@ watch(skills, () => {
   }
 }
 
-// ── Transitions ────────────────────────
-
 .blade-enter-active {
   transition: all 0.3s ease-out;
 }
@@ -516,8 +421,6 @@ watch(skills, () => {
   transition: transform 0.3s ease;
 }
 
-// ── Keyframes ──────────────────────────
-
 @keyframes fade-up {
   0% { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -531,10 +434,5 @@ watch(skills, () => {
 @keyframes blade-in {
   0% { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 </style>

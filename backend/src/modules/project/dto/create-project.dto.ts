@@ -11,10 +11,6 @@ export class CreateProjectDto {
 
   @IsOptional()
   @IsString()
-  url?: string;
-
-  @IsOptional()
-  @IsString()
   startDate?: string;
 
   @IsOptional()
@@ -42,10 +38,6 @@ export class CreateProjectDto {
   categoryIds?: string[];
 
   @IsOptional()
-  @IsArray()
-  skillIds?: string[];
-
-  @IsOptional()
   @IsEnum(ProjectStatus)
   status?: ProjectStatus;
 
@@ -60,14 +52,6 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   imageId?: string;
-
-  @IsOptional()
-  @IsString()
-  liveUrl?: string;
-
-  @IsOptional()
-  @IsString()
-  sourceUrl?: string;
 
   @IsOptional()
   @IsArray()

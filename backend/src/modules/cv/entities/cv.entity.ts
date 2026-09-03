@@ -7,6 +7,7 @@ import { Contact } from '../../contact/entities/contact.entity';
 import { CvSkill } from './cv-skill.entity';
 import { CvProject } from './cv-project.entity';
 import { CvPassion } from './cv-passion.entity';
+import { CvProjectPoint } from './cv-project-point.entity';
 
 @Entity('cvs')
 export class Cv {
@@ -53,8 +54,8 @@ export class Cv {
   @JoinTable({ name: 'cv_contacts' })
   contacts: Contact[];
 
-  @Column({ type: 'json', nullable: true })
-  projectBullets: Record<string, number[]>;
+  @OneToMany(() => CvProjectPoint, (link) => link.cv, { cascade: true, orphanedRowAction: 'delete' })
+  projectPointLinks: CvProjectPoint[];
 
   @Column({ nullable: true })
   pictureId: string;
@@ -71,6 +72,12 @@ export class Cv {
 
   @Column({ type: 'varchar', length: 64, default: 'classic' })
   style: string;
+
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  createdBy: string;
+
+  @Column({ type: 'boolean', default: false })
+  aiGenerated: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

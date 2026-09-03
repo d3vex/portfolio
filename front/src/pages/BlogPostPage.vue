@@ -34,7 +34,7 @@ const { data: post, loading } = useAsyncData(() => getBlogPost(route.params.slug
           <h1 class="blog_post__title">{{ post.title }}</h1>
           <div class="blog_post__meta">
             <span> {{ t('blog.published_on') }} {{ post.publishedAt }}</span>
-            <span class="blog_post__meta-sep">·</span>
+            <span>·</span>
             <span>{{ post.readingTime }} min read</span>
           </div>
         </div>

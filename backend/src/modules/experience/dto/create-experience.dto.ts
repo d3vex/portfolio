@@ -33,10 +33,6 @@ export class CreateExperienceDto {
 
   @IsOptional()
   @IsArray()
-  skillIds?: string[];
-
-  @IsOptional()
-  @IsArray()
   tags?: string[];
 
   @IsOptional()

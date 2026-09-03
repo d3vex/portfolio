@@ -4,7 +4,6 @@ import type {
   AiCvGenerationResult,
   AiGenerationOptions,
   AiStatus,
-  ApiResponse,
   CvStyle,
 } from '@/lib/types'
 
@@ -93,20 +92,8 @@ export function cloneCv(id: string) {
   return request<any>(`/cv/${id}/clone`, { method: 'POST' })
 }
 
-const entityPathMap: Record<string, string> = {
-  skills: 'skills',
-  experiences: 'experiences',
-  projects: 'projects',
-  education: 'education',
-  languages: 'languages',
-  passions: 'passions',
-  contacts: 'contact',
-  profile: 'profile',
-  categories: 'categories',
-}
-
 function entityPath(entity: string): string {
-  return entityPathMap[entity] || entity
+  return entity === 'contacts' ? 'contact' : entity
 }
 
 export function getEntity(entity: string) {

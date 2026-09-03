@@ -68,10 +68,6 @@ function move(index: number, delta: -1 | 1) {
   commit()
 }
 
-function onDragEnd() {
-  commit()
-}
-
 const availableItems = computed(() =>
   props.items.filter((item) => !dragList.value.some((selected) => selected.id === item.id))
 )
@@ -84,7 +80,7 @@ const groupedAvailable = computed(() => {
     if (bucket) bucket.push(item)
     else groups.set(key, [item])
   }
-  return Array.from(groups.entries()).map(([group, list]) => ({ group, list }))
+  return [...groups.entries()].map(([group, list]) => ({ group, list }))
 })
 </script>
 
@@ -138,7 +134,7 @@ const groupedAvailable = computed(() => {
             handle=".drag-handle"
             ghost-class="opacity-40"
             class="space-y-2"
-            @end="onDragEnd"
+            @end="commit"
           >
             <template #item="{ element, index }">
               <div class="flex items-center gap-2 px-2 py-2 rounded-lg border border-accent/30 bg-accent/5">

@@ -209,7 +209,11 @@ function hostnameOf(url: string): string {
 function normalizePoint(point: unknown, skillNameById: Map<string, string>): CvPayloadPoint {
   const isString = typeof point === 'string';
   const text = isString ? point : String((point as { text?: unknown })?.text ?? '');
-  const rawIds = isString ? [] : (point as { skillIds?: unknown })?.skillIds ?? [];
+  const rawIds = isString
+    ? []
+    : (point as { skillLinks?: unknown[]; skillIds?: unknown })?.skillLinks?.length
+      ? ((point as { skillLinks: { skillId?: string }[] }).skillLinks).map((l) => l.skillId ?? '')
+      : ((point as { skillIds?: unknown })?.skillIds ?? []);
   const skillIds = Array.isArray(rawIds)
     ? rawIds.filter((id): id is string => typeof id === 'string')
     : [];
@@ -271,8 +275,9 @@ export class RenderService {
       : 'LM';
     const titleText = cv.titleOverride || cv.specialization || 'Professional';
 
+    const skills = cv.skills || [];
     const skillNameById = new Map<string, string>(
-      (cv.skills || []).map((skill) => [skill.id, skill.name]),
+      skills.map((skill) => [skill.id, skill.name]),
     );
 
     const skillToPayload = (skill: Skill): CvPayloadSkill => ({
@@ -285,11 +290,10 @@ export class RenderService {
       cvCategory: skill.cvCategory,
     });
 
-    const hard = (cv.skills || []).filter((s) => s.cvCategory === 'hard').map(skillToPayload);
-    const soft = (cv.skills || []).filter((s) => s.cvCategory === 'soft').map(skillToPayload);
+    const hard = skills.filter((s) => s.cvCategory === 'hard').map(skillToPayload);
+    const soft = skills.filter((s) => s.cvCategory === 'soft').map(skillToPayload);
 
-    const profiles = await this.profileRepo.find();
-    const profile = profiles[0] ?? null;
+    const profile = await this.profileRepo.findOne({ where: {} }) ?? null;
 
     const contacts = (cv.contacts || []).map((contact): CvPayloadContact => {
       const value = contact.value || '';
@@ -349,7 +353,9 @@ export class RenderService {
       order: exp.order,
     }));
 
-    const projects = (cv.projects || []).map((project): CvPayloadProject => ({
+    const projects = (cv.projects || []).map((project): CvPayloadProject => {
+      const mainLink = this.mainProjectLink(project);
+      return {
       name: project.title,
       subtitle: project.subtitle ?? null,
       description: project.description ?? null,
@@ -360,14 +366,15 @@ export class RenderService {
       endLabel: formatDateLabel(project.endDate),
       startMachine: machineDate(project.startDate),
       endMachine: machineDate(project.endDate),
-      link: project.url || project.liveUrl || project.sourceUrl || null,
-      liveUrl: project.liveUrl ?? null,
-      sourceUrl: project.sourceUrl ?? null,
+      link: mainLink?.url ?? null,
+        liveUrl: mainLink?.url ?? null,
+        sourceUrl: mainLink?.url ?? null,
       points: this.projectPoints(project, cv.projectBullets).map((point) =>
         normalizePoint(point, skillNameById),
       ),
       order: project.order,
-    }));
+      };
+    });
 
     const education = (cv.education || [])
       .slice()
@@ -452,5 +459,14 @@ export class RenderService {
     const lastSpace = cut.lastIndexOf(' ');
     const boundary = lastSpace > 140 ? lastSpace : 200;
     return `${cut.slice(0, boundary).trimEnd()}…`;
+  }
+
+  private mainProjectLink(project: Project): { url: string; type?: string } | null {
+    const all = (project.links || []).slice();
+    if (!all.length) return null;
+    const preferred = all.find(
+      (l) => /demo|website|live/i.test(l.type ?? '') || /demo|website|live/i.test(l.label ?? ''),
+    );
+    return preferred ?? all[0];
   }
 }

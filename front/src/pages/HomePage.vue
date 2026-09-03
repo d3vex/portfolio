@@ -232,21 +232,9 @@ $slot-size: 14px;
   &__content {
     @apply relative z-20 text-center px-4;
     max-width: 620px;
-    // glass-like backdrop for readability
     > * {
       position: relative;
     }
-  }
-
-  &__statuses {
-    @apply mb-5 space-y-0.5;
-  }
-
-  &__status-line {
-    @apply font-mono text-xs text-left;
-    color: var(--color-text-secondary);
-    animation: status-appear 0.4s ease-out both;
-    padding-left: 1.5rem;
   }
 
   &__greeting {
@@ -292,17 +280,7 @@ $slot-size: 14px;
     @apply flex flex-col sm:flex-row items-center justify-center gap-4 mb-8;
   }
 
-  &__hint {
-    @apply text-sm flex items-center justify-center gap-1.5 cursor-pointer;
-    color: var(--color-text-secondary);
-  }
-
-  &__hint-link {
-    @apply hover:text-accent transition-colors;
-  }
 }
-
-// ── Keyframes ──────────────────────────────────
 
 @keyframes led-blink {
   0%, 85%, 100% { opacity: 1; transform: scale(1); }
@@ -366,8 +344,4 @@ $slot-size: 14px;
   50% { opacity: 1; }
 }
 
-@keyframes status-appear {
-  0% { opacity: 0; transform: translateX(-10px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
 </style>

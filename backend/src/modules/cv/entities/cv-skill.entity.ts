@@ -1,16 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Cv } from './cv.entity';
 import { Skill } from '../../skill/entities/skill.entity';
 
 @Entity('cv_skills')
 export class CvSkill {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'uuid' })
+  @PrimaryColumn({ type: 'uuid' })
   cvId: string;
 
-  @Column({ type: 'uuid' })
+  @PrimaryColumn({ type: 'uuid' })
   skillId: string;
 
   @Column({ type: 'int', default: 0 })

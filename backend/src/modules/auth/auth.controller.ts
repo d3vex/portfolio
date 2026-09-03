@@ -1,22 +1,20 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Public } from '../../common/decorators/public.decorator';
-import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Public()
   @Post('register')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.FORBIDDEN)
   @ApiOperation({ summary: 'Register a new user' })
-  async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  register(@Body() dto: RegisterDto) {
+    throw new ForbiddenException('Registration is disabled');
   }
 
   @Public()

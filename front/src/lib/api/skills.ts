@@ -25,7 +25,7 @@ function mapSkill(s: any, catMap: Record<string, string>): Skill {
     cvCategory: (s.cvCategory === 'soft' ? 'soft' : 'hard') as Skill['cvCategory'],
     level: s.level || 0,
     icon: s.icon || '',
-    keywords: s.keywords || [],
+    keywords: ((s.keywords || []) as any[]).map((k: any) => (typeof k === 'string' ? k : k.value)),
   }
 }
 

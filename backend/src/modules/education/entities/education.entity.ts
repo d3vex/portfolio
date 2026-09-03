@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Project } from '../../project/entities/project.entity';
+import { EducationTag } from './education-tag.entity';
 
 @Entity('education')
 export class Education {
@@ -24,8 +25,8 @@ export class Education {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'json', nullable: true })
-  tags: string[];
+  @OneToMany(() => EducationTag, (tag) => tag.education, { cascade: true, orphanedRowAction: 'delete' })
+  tags: EducationTag[];
 
   @OneToMany(() => Project, project => project.education)
   projects: Project[];

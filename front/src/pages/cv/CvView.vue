@@ -110,7 +110,7 @@ function iconUrl(icon: string, color?: string): string {
   return url
 }
 
-function formatAboutHtml(text: string): string {
+function formatAbout(text: string): string {
   return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')
 }
 
@@ -183,13 +183,14 @@ function buildPrintHtml(): string {
     `<div class="passion-item">${p.icon ? `<img src="${iconUrl(p.icon, '#3B82F6')}" width="16" height="16" alt="">` : ''}<div><span class="passion-name">${es(p.name)}</span>${p.description ? `<span class="passion-desc">${es(p.description)}</span>` : ''}</div></div>`
   ).join('\n      ')
 
-  const aboutHtml = c.aboutText ? formatAboutHtml(c.aboutText) : ''
+  const aboutHtml = c.aboutText ? formatAbout(c.aboutText) : ''
   const aboutSection = aboutHtml ? `<section><h2>À Propos</h2><div class="about-text"><p>${aboutHtml}</p></div></section>` : ''
 
   const expHtml = linkedData.value.experiences.map(exp => {
     const items = pts(exp, 'experiencePoints').map((d: any) => {
       const txt = desc(d)
-      const ref = d.skillIds?.length ? ` <span class="skill-ref">— ${skillN(d.skillIds)}</span>` : ''
+      const names = pointSkillNames(d)
+      const ref = names.length ? ` <span class="skill-ref">— ${es(names.join(', '))}</span>` : ''
       return `<li>${es(txt)}${ref}</li>`
     }).join('\n            ')
     const companyLink = exp.companyUrl
@@ -209,12 +210,15 @@ function buildPrintHtml(): string {
     })()
     const items = pBullets.map((d: any) => {
       const txt = desc(d)
-      const ref = d.skillIds?.length ? ` <span class="skill-ref">— ${skillN(d.skillIds)}</span>` : ''
+      const names = pointSkillNames(d)
+      const ref = names.length ? ` <span class="skill-ref">— ${es(names.join(', '))}</span>` : ''
       return `<li>${es(txt)}${ref}</li>`
     }).join('\n            ')
     const linkParts: string[] = []
-    if (proj.liveUrl) linkParts.push(`<a href="${es(proj.liveUrl)}" target="_blank" class="exp-link">Live</a>`)
-    if (proj.sourceUrl) linkParts.push(`<a href="${es(proj.sourceUrl)}" target="_blank" class="exp-link">Source</a>`)
+    const mainUrl = projectMainLink(proj)
+    const srcUrl = projectSourceLink(proj)
+    if (mainUrl) linkParts.push(`<a href="${es(mainUrl)}" target="_blank" class="exp-link">Live</a>`)
+    if (srcUrl) linkParts.push(`<a href="${es(srcUrl)}" target="_blank" class="exp-link">Source</a>`)
     const links = linkParts.length ? `<div class="exp-subtitle">${linkParts.join(' ')}</div>` : ''
     const sub = proj.subtitle ? `<div class="exp-subtitle project-subtitle">${es(proj.subtitle)}</div>` : ''
     return `<div class="project-item"><div class="exp-header"><div class="project-head"><div class="exp-title">${es(proj.title)}</div>${links}</div><span class="exp-date">${es(formatDate(proj.startDate))} - ${es(formatDate(proj.endDate))}</span></div>${sub}${items ? `<ul class="exp-desc">${items}</ul>` : ''}</div>`
@@ -224,8 +228,7 @@ function buildPrintHtml(): string {
     `<div class="education-item"><div><div class="edu-title">${es(edu.title)}</div><div class="edu-school">${es(edu.school)} ${edu.school && edu.startDate ? '· ' : ''}${es(formatDate(edu.startDate || edu.date))} - ${es(formatDate(edu.endDate))}</div></div><span class="edu-date">${es(formatDate(edu.startDate || edu.date))} - ${es(formatDate(edu.endDate))}</span></div>`
   ).join('\n      ')
 
-  const personNamePrint = c.candidateName || c.name
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${es(personNamePrint || 'CV')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${cvStyleCss}</style></head><body><div class="cv-container"><aside class="sidebar"><div><div class="photo-placeholder">${photoHtml}</div><h1>${es(personNamePrint)}</h1><span class="title-badge">${es(c.titleOverride || c.specialization || 'Professional')}</span>${c.availability ? `<span class="availability-badge">${es(c.availability)}</span>` : ''}</div>${linkedData.value.contacts.length ? `<div><h2>Contact</h2>${contactHtml}</div>` : ''}${hardSkillsHtml ? `<div><h2>Hard Skills</h2><div class="skills-grid">${hardSkillsHtml}</div></div>` : ''}${softSkillsHtml ? `<div><h2>Soft Skills</h2>${softSkillsHtml}</div>` : ''}${langHtml ? `<div><h2>Langues</h2>${langHtml}</div>` : ''}${passionHtml ? `<div><h2>Passions</h2>${passionHtml}</div>` : ''}</aside><main class="main">${aboutSection}${expHtml ? `<section><h2>Expériences Professionnelles</h2>${expHtml}</section>` : ''}${projHtml ? `<section><h2>Projets</h2>${projHtml}</section>` : ''}${eduHtml ? `<section><h2>Formation</h2>${eduHtml}</section>` : ''}</main></div></body></html>`
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${es(personName || 'CV')}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${cvStyleCss}</style></head><body><div class="cv-container"><aside class="sidebar"><div><div class="photo-placeholder">${photoHtml}</div><h1>${es(personName)}</h1><span class="title-badge">${es(c.titleOverride || c.specialization || 'Professional')}</span>${c.availability ? `<span class="availability-badge">${es(c.availability)}</span>` : ''}</div>${linkedData.value.contacts.length ? `<div><h2>Contact</h2>${contactHtml}</div>` : ''}${hardSkillsHtml ? `<div><h2>Hard Skills</h2><div class="skills-grid">${hardSkillsHtml}</div></div>` : ''}${softSkillsHtml ? `<div><h2>Soft Skills</h2>${softSkillsHtml}</div>` : ''}${langHtml ? `<div><h2>Langues</h2>${langHtml}</div>` : ''}${passionHtml ? `<div><h2>Passions</h2>${passionHtml}</div>` : ''}</aside><main class="main">${aboutSection}${expHtml ? `<section><h2>Expériences Professionnelles</h2>${expHtml}</section>` : ''}${projHtml ? `<section><h2>Projets</h2>${projHtml}</section>` : ''}${eduHtml ? `<section><h2>Formation</h2>${eduHtml}</section>` : ''}</main></div></body></html>`
 }
 
 async function printCv() {
@@ -285,13 +288,6 @@ function skillNamesByIds(ids: string[] | undefined): string[] {
   return ids.map(id => skills.value.find(s => s.id === id)?.name).filter(Boolean)
 }
 
-function formatAbout(text: string): string {
-  if (!text) return ''
-  let html = text.replace(/\n/g, '<br>')
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  return html
-}
-
 function nameInitials(): string {
   const n = cv.value?.candidateName || cv.value?.name
   return n ? n.split(/\s+/).map((s: string) => s[0]).join('').slice(0, 2).toUpperCase() : 'LM'
@@ -319,6 +315,29 @@ function selectedProjectPoints(proj: any): any[] {
   const selected = map[proj.id]
   if (selected === undefined) return proj.projectPoints || []
   return (proj.projectPoints || []).filter((_: any, i: number) => selected.includes(i))
+}
+
+function pointSkillNames(point: any): string[] {
+  const skillLinks = point?.skillLinks || []
+  return skillLinks
+    .map((l: any) => l.skill?.name ?? l.name)
+    .filter((n: string) => !!n)
+}
+
+function projectLink(proj: any, type?: string): string | null {
+  const links = proj?.links || []
+  const found = type
+    ? links.find((l: any) => l.type === type)
+    : (links.find((l: any) => ['demo', 'website', 'live'].includes(l.type)) || links[0])
+  return found?.url || null
+}
+
+function projectMainLink(proj: any): string | null {
+  return projectLink(proj)
+}
+
+function projectSourceLink(proj: any): string | null {
+  return projectLink(proj, 'source')
 }
 
 function hostname(url: string): string {
@@ -442,7 +461,7 @@ function hostname(url: string): string {
               <ul v-if="exp.experiencePoints?.length" class="tc-item-list">
                 <li v-for="(d, i) in exp.experiencePoints" :key="i">
                   {{ descriptionText(d) }}
-                  <span v-if="d.skillIds?.length" class="tc-skill-ref">— {{ skillNamesByIds(d.skillIds).join(', ') }}</span>
+                  <span v-if="pointSkillNames(d).length" class="tc-skill-ref">— {{ pointSkillNames(d).join(', ') }}</span>
                 </li>
               </ul>
             </div>
@@ -456,8 +475,8 @@ function hostname(url: string): string {
                   <div class="tc-item-title">{{ proj.title }}</div>
                   <div class="tc-item-sub">
                     <span v-if="proj.subtitle">{{ proj.subtitle }}</span>
-                    <a v-if="proj.liveUrl" :href="proj.liveUrl" target="_blank"> · Live</a>
-                    <a v-if="proj.sourceUrl" :href="proj.sourceUrl" target="_blank"> · Source</a>
+                    <a v-if="projectMainLink(proj)" :href="projectMainLink(proj)!" target="_blank"> · Live</a>
+                    <a v-if="projectSourceLink(proj)" :href="projectSourceLink(proj)!" target="_blank"> · Source</a>
                   </div>
                 </div>
                 <span class="tc-item-date">{{ formatDate(proj.startDate) }} – {{ formatDate(proj.endDate) }}</span>
@@ -465,7 +484,7 @@ function hostname(url: string): string {
               <ul v-if="selectedProjectPoints(proj).length" class="tc-item-list">
                 <li v-for="(d, i) in selectedProjectPoints(proj)" :key="i">
                   {{ descriptionText(d) }}
-                  <span v-if="d.skillIds?.length" class="tc-skill-ref">— {{ skillNamesByIds(d.skillIds).join(', ') }}</span>
+                  <span v-if="pointSkillNames(d).length" class="tc-skill-ref">— {{ pointSkillNames(d).join(', ') }}</span>
                 </li>
               </ul>
               <div v-if="proj.technologies?.length" class="flex flex-wrap gap-1 mt-2">
@@ -595,7 +614,7 @@ function hostname(url: string): string {
             <ul v-if="exp.experiencePoints?.length" class="exp-desc">
               <li v-for="(d, i) in exp.experiencePoints" :key="i">
                 {{ descriptionText(d) }}
-                <span v-if="d.skillIds?.length" class="skill-ref">— {{ skillNamesByIds(d.skillIds).join(', ') }}</span>
+                <span v-if="pointSkillNames(d).length" class="skill-ref">— {{ pointSkillNames(d).join(', ') }}</span>
               </li>
             </ul>
           </div>
@@ -607,12 +626,12 @@ function hostname(url: string): string {
             <div class="exp-header">
               <div class="project-head">
                 <div class="exp-title">{{ proj.title }}</div>
-                <div v-if="proj.liveUrl || proj.sourceUrl" class="exp-subtitle">
-                  <a v-if="proj.liveUrl" :href="proj.liveUrl" target="_blank" class="exp-link">
+                <div v-if="projectMainLink(proj) || projectSourceLink(proj)" class="exp-subtitle">
+                  <a v-if="projectMainLink(proj)" :href="projectMainLink(proj)!" target="_blank" class="exp-link">
                     <Icon icon="mdi:external-link" class="w-3 h-3" />
                     Live
                   </a>
-                  <a v-if="proj.sourceUrl" :href="proj.sourceUrl" target="_blank" class="exp-link">
+                  <a v-if="projectSourceLink(proj)" :href="projectSourceLink(proj)!" target="_blank" class="exp-link">
                     <Icon icon="mdi:github" class="w-3 h-3" />
                     Source
                   </a>
@@ -624,7 +643,7 @@ function hostname(url: string): string {
             <ul v-if="selectedProjectPoints(proj).length" class="exp-desc">
               <li v-for="(d, i) in selectedProjectPoints(proj)" :key="i">
                 {{ descriptionText(d) }}
-                <span v-if="d.skillIds?.length" class="skill-ref">— {{ skillNamesByIds(d.skillIds).join(', ') }}</span>
+                <span v-if="pointSkillNames(d).length" class="skill-ref">— {{ pointSkillNames(d).join(', ') }}</span>
               </li>
             </ul>
             <div v-if="proj.technologies?.length" class="flex flex-wrap gap-1 mt-2">
