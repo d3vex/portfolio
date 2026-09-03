@@ -66,6 +66,22 @@ const entities = [
       </div>
     </div>
 
+    <button @click="router.push('/admin/cvs/ai-generator')"
+      class="w-full text-left mb-8 bg-gradient-to-r from-accent to-accent-hover rounded-2xl p-6 text-white hover:opacity-95 active:opacity-90 transition-opacity cursor-pointer shadow-lg shadow-accent/25">
+      <div class="flex items-center gap-5">
+        <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+          <Icon icon="mdi:auto-fix" class="w-7 h-7" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-lg font-heading font-semibold">Générateur de CV par IA</p>
+          <p class="text-sm text-white/85 mt-0.5">Collez une description de poste : l'IA génère un CV complet avec des suggestions de compétences et de points clés à valider.</p>
+        </div>
+        <svg class="w-6 h-6 text-white/70 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M13 7l5 5-5 5M18 12H6" />
+        </svg>
+      </div>
+    </button>
+
     <h2 class="text-xl font-heading font-semibold mb-4">Manage Data</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <button v-for="e in entities" :key="e.key"

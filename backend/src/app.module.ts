@@ -14,6 +14,7 @@ import { CvRenderModule } from './modules/cv-render/cv-render.module';
 import { TimelineModule } from './modules/timeline/timeline.module';
 import { ImagesModule } from './modules/images/images.module';
 import { CategoryModule } from './modules/category/category.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CategoryModule } from './modules/category/category.module';
     TimelineModule,
     ImagesModule,
     CategoryModule,
+    AiModule,
   ],
 })
 export class AppModule {}

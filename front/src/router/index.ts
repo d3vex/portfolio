@@ -64,6 +64,11 @@ const router = createRouter({
       component: () => import('@/pages/cv/CvBuilder.vue'),
     },
     {
+      path: '/admin/cvs/ai-generator',
+      name: 'admin-cv-ai-generator',
+      component: () => import('@/pages/cv/CvAiGenerator.vue'),
+    },
+    {
       path: '/admin/cvs/:id',
       name: 'admin-cv-view',
       component: () => import('@/pages/cv/CvView.vue'),
